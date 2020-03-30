@@ -1,10 +1,11 @@
-// Visual Micro is in vMicro>General>Tutorial Mode
 // 
 /*
 Created:	03/07/2018 20:07:15
 Author:     CRONER\Ale
 */
 
+#include <ArduinoJson.hpp>
+#include <ArduinoJson.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <DHT_U.h>
@@ -15,9 +16,12 @@ Author:     CRONER\Ale
 #include <OLEDDisplay.h>
 #include <HardwareSerial.h>
 #include <SoftwareSerial.h>
+//#include <GrowlManager.h>
 #include "SSD1306.h"
-#include <GrowlChamber.h>
 #include <WiFi.h>
+#include <GrowlManager.h> 
+
+
 
 /* Sketch to demonstrate basic SI odel functionality
 
@@ -32,27 +36,37 @@ Connect 15 to RX of SI UART
 //OLED_RST -- GPIO16
 */
 
-
-int MAIN_LIGHTS = 25;
-int HEATER = 12;
-
+// WIFI_LoRa_32 ports
+// GPIO5  -- SX1278's SCK
+// GPIO19 -- SX1278's MISO
+// GPIO27 -- SX1278's MOSI
+// GPIO18 -- SX1278's CS
+// GPIO14 -- SX1278's RESET
+// GPIO26 -- SX1278's IRQ(Interrupt Request)
+#define MAIN_LIGHTS 25//onboardLED
+#define HEATER  12
+#define FAN  13
+#define OLED  16
+#define FAN2  2
+#define LIGHT_SENSOR 33
 #define DHTPIN 22
 #define DHTTYPE DHT22
+
 DHT dht(DHTPIN, DHTTYPE);
 
-GrowlChamber gc = GrowlChamber();
+GrowlManager gm = GrowlManager();
 
- 
 SSD1306  display(0x3c, 4, 15);
 //WIFI
-
-
 const char* ssid = "Cisco66778";
 const char* password = "cimadaconegliano";
 
 const char* host = "192.168.0.54";
 const char* streamId = "....................";
 const char* privateKey = "....................";
+
+//LIGHTSENSOR
+float Rsensor; //Resistance of sensor in K
 
 /**************************************************************************/
 /*
@@ -61,21 +75,20 @@ Arduino setup function (automatically called at startup)
 /**************************************************************************/
 void setup(void)
 {
-	pinMode(HEATER, OUTPUT);
 	pinMode(MAIN_LIGHTS, OUTPUT);
-	pinMode(16, OUTPUT);
-	digitalWrite(16, LOW);    // set GPIO16 low to reset OLED
+	pinMode(FAN2, OUTPUT);
+	pinMode(FAN, OUTPUT);
+	pinMode(HEATER, OUTPUT);
+	pinMode(LIGHT_SENSOR, INPUT);
+	pinMode(OLED, OUTPUT);
+	digitalWrite(OLED, LOW);    // set GPIO16 low to reset OLED
 	delay(50);
-	digitalWrite(16, HIGH); // while OLED is running, must set GPIO16 in high
+	digitalWrite(OLED, HIGH); // while OLED is running, must set GPIO16 in high
 	dht.begin();
-	
+
 	display.init();
 	display.setLogBuffer(5, 30);
 	Serial.begin(57600);
-	Serial.println("Current Sensor Test");
-	Serial.println("");
-
- 
 
 	displaySensorDetails();
 
@@ -114,8 +127,25 @@ void loop(void)
 {
 
 	digitalWrite(HEATER, LOW);    // set GPIO16 low to reset OLED
-	delay(50);
+	digitalWrite(FAN2, HIGH);
+	digitalWrite(FAN, HIGH);
+	digitalWrite(MAIN_LIGHTS, HIGH);
+	delay(100);
+
+	digitalWrite(FAN, LOW);
 	digitalWrite(HEATER, HIGH);
+	delay(100);
+	digitalWrite(FAN2, LOW);
+
+	int sensorValue = analogRead(LIGHT_SENSOR);
+	Rsensor = (float)(1023 - sensorValue) * 10 / sensorValue;
+	Serial.println("the analog read data is ");
+	Serial.println(sensorValue);
+	Serial.println("the sensor resistance is ");
+	Serial.println(Rsensor, DEC);
+
+	delay(100);
+	digitalWrite(FAN2, LOW);
 
 	/*OLED Report*/
 	drawText();
@@ -157,14 +187,6 @@ void loop(void)
 
 
 
-
-
-
-
-
-
-
-
 	Serial.print("connecting to ");
 	Serial.println(host);
 
@@ -199,7 +221,26 @@ void loop(void)
 	// Read all the lines of the reply from server and print them to Serial
 	while (client.available()) {
 		String line = client.readStringUntil('\r');
-		Serial.print(line);
+		Serial.println(line);
+		ARDUINOJSON_NAMESPACE::StaticJsonDocument<400> doc;
+		ARDUINOJSON_NAMESPACE::DeserializationError err;
+		err = ARDUINOJSON_NAMESPACE::deserializeJson(doc, line);
+		if (err) {
+			Serial.print(F("deserializeJson() failed: "));
+			Serial.println(err.c_str());
+			continue;
+		}
+		else {
+
+			// Fetch values.
+			//
+			// Most of the time, you can rely on the implicit casts.
+			// In other case, you can do doc["time"].as<long>();
+			const char* sensor = doc["parameter"];
+			Serial.print("SENSOR FROM JSON:");
+			Serial.println(sensor);
+		}
+		break;
 	}
 
 }
