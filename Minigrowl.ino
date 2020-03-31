@@ -21,8 +21,6 @@ Author:     CRONER\Ale
 #include <WiFi.h>
 #include <GrowlManager.h> 
 
-
-
 /* Sketch to demonstrate basic SI odel functionality
 
 Connections
@@ -62,8 +60,7 @@ const char* ssid = "Cisco66778";
 const char* password = "cimadaconegliano";
 
 const char* host = "192.168.0.54";
-const char* streamId = "....................";
-const char* privateKey = "....................";
+short pc;
 
 //LIGHTSENSOR
 float Rsensor; //Resistance of sensor in K
@@ -76,6 +73,8 @@ Arduino setup function (automatically called at startup)
 void setup(void)
 {
 	pinMode(MAIN_LIGHTS, OUTPUT);
+	gm.setMainLightsPin(MAIN_LIGHTS);
+
 	pinMode(FAN2, OUTPUT);
 	pinMode(FAN, OUTPUT);
 	pinMode(HEATER, OUTPUT);
@@ -89,8 +88,9 @@ void setup(void)
 	display.init();
 	display.setLogBuffer(5, 30);
 	Serial.begin(57600);
-
 	displaySensorDetails();
+	//Growlmanager init
+	gm.GrowlManagerInit();
 
 	WiFi.begin(ssid, password);
 
@@ -103,6 +103,7 @@ void setup(void)
 	Serial.println("WiFi connected");
 	Serial.println("IP address: ");
 	Serial.println(WiFi.localIP());
+	pc = 0;//program counter
 }
 
 /**************************************************************************/
@@ -125,11 +126,10 @@ void displaySensorDetails(void)
 
 void loop(void)
 {
-
+	gm.GrowlManagerLoop();
 	digitalWrite(HEATER, LOW);    // set GPIO16 low to reset OLED
 	digitalWrite(FAN2, HIGH);
 	digitalWrite(FAN, HIGH);
-	digitalWrite(MAIN_LIGHTS, HIGH);
 	delay(100);
 
 	digitalWrite(FAN, LOW);

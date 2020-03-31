@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{e8b4bc01-65bd-47ae-8e2d-80a11da6b3c8}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="$(MSBuildThisFileDirectory)readme.txt" />
+    <Text Include="$(MSBuildThisFileDirectory)library.properties" />
+    <Text Include="$(MSBuildThisFileDirectory)src\GrowlESPLibrary.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- <ClInclude Include="$(MSBuildThisFileDirectory)GrowlESPLibrary.h" /> -->
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlChamber.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\Sensor.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlChamber.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\Sensor.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlESPLibrary.cpp" />
+  </ItemGroup>
+</Project>
