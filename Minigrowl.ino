@@ -50,7 +50,7 @@ Connect 15 to RX of SI UART
 #define DHTPIN 22
 #define DHTTYPE DHT22
 
-DHT dht(DHTPIN, DHTTYPE);
+//DHT dht(DHTPIN, DHTTYPE);
 
 GrowlManager gm = GrowlManager();
 
@@ -72,6 +72,7 @@ Arduino setup function (automatically called at startup)
 /**************************************************************************/
 void setup(void)
 {
+	gm.init();
 	pinMode(MAIN_LIGHTS, OUTPUT);
 	gm.setMainLightsPin(MAIN_LIGHTS);
 
@@ -83,14 +84,14 @@ void setup(void)
 	digitalWrite(OLED, LOW);    // set GPIO16 low to reset OLED
 	delay(50);
 	digitalWrite(OLED, HIGH); // while OLED is running, must set GPIO16 in high
-	dht.begin();
+	//dht.begin();
 
 	display.init();
 	display.setLogBuffer(5, 30);
 	Serial.begin(57600);
 	displaySensorDetails();
 	//Growlmanager init
-	gm.GrowlManagerInit();
+	gm.init();
 
 	WiFi.begin(ssid, password);
 
@@ -126,7 +127,7 @@ void displaySensorDetails(void)
 
 void loop(void)
 {
-	gm.GrowlManagerLoop();
+	gm.loop();
 	digitalWrite(HEATER, LOW);    // set GPIO16 low to reset OLED
 	digitalWrite(FAN2, HIGH);
 	digitalWrite(FAN, HIGH);
@@ -159,20 +160,10 @@ void loop(void)
 	}*/
 
 	//delay(100);
-	delay(2000);
+	delay(1000);
 
-	float h = dht.readHumidity();
-	float t = dht.readTemperature();
-	float f = dht.readTemperature(true);
-
-	if (isnan(h) || isnan(t) || isnan(f)) {
-		Serial.println(F("Failed to read from DHT sensor!"));
-		return;
-	}
-
-	float hif = dht.computeHeatIndex(f, h);
-	float hic = dht.computeHeatIndex(t, h, false);
-
+	Serial.print(gm.reportStatus().c_str());
+	/*
 	Serial.print(F("Humidity: "));
 	Serial.print(h);
 	Serial.print(F("%  Temperature: "));
@@ -184,7 +175,7 @@ void loop(void)
 	Serial.print(F("°C "));
 	Serial.print(hif);
 	Serial.println(F("°F"));
-
+	*/
 
 
 	Serial.print("connecting to ");

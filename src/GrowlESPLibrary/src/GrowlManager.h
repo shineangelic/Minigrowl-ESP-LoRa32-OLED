@@ -13,8 +13,9 @@ class GrowlManager
 {
 public:
 	GrowlManager();
-	void GrowlManagerInit();
-	void GrowlManagerLoop();
+	void init();
+	void loop();
+	std::string reportStatus();
 
 	std::tm	getGrowlManagerTime();
 	GrowlChamber getChamber();

@@ -10,6 +10,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GrowlESPLibrary", "src\GrowlESPLibrary\GrowlESPLibrary.vcxitems", "{E8B4BC01-65BD-47AE-8E2D-80A11DA6B3C8}"
 EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\GrowlESPLibrary\GrowlESPLibrary.vcxitems*{c5f80730-f44f-4478-bdae-6634efc2ca88}*SharedItemsImports = 4
+		src\GrowlESPLibrary\GrowlESPLibrary.vcxitems*{e8b4bc01-65bd-47ae-8e2d-80a11da6b3c8}*SharedItemsImports = 9
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
 		Release|x86 = Release|x86
