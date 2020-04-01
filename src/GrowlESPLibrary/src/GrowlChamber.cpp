@@ -2,9 +2,6 @@
 #include <DHT.h>
 
 
-//DHT dht(DHTPIN, DHTTYPE);
-#define DHTPIN 22 
-#define DHTTYPE DHT22
 DHT _dht(DHTPIN, DHTTYPE);
 void GrowlChamber::init()
 {
@@ -17,6 +14,11 @@ void GrowlChamber::loop()
 {
 	//trigger REAL READ
 	float f = _dht.readTemperature(false, true);
+}
+
+bool GrowlChamber::getMainLightsStatus()
+{
+	return _isMainLightsON;
 }
 
 bool GrowlChamber::switchMainLights(bool on)
@@ -57,6 +59,17 @@ float GrowlChamber::getHumidity()
 		return -1;
 	}
 	return h;
+}
+
+float GrowlChamber::getLumen()
+{
+	int sensorValue = analogRead(LIGHT_SENSOR);
+	return (float)(1023 - sensorValue) * 10 / sensorValue;
+	/*Serial.println("the analog read data is ");
+	Serial.println(sensorValue);
+	Serial.println("the sensor resistance is ");
+	Serial.println(Rsensor, DEC);
+	return 0.0f;*/
 }
 
 GrowlChamber::GrowlChamber()

@@ -6,6 +6,7 @@
 #include "WProgram.h"
 #endif
 
+#include <GrowlSensor.h>
 #include <ctime>
 #include "GrowlChamber.h"
 
@@ -21,8 +22,10 @@ public:
 	GrowlChamber getChamber();
 	void setMainLightsPin(int HWPIN);
 private:
+	void sendCurrentSensors();
 	short _pc;//program counter
 	GrowlChamber _chamber;
 	std::tm _time;
+	
 };
 

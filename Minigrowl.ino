@@ -46,12 +46,12 @@ Connect 15 to RX of SI UART
 #define FAN  13
 #define OLED  16
 #define FAN2  2
-#define LIGHT_SENSOR 33
-#define DHTPIN 22
-#define DHTTYPE DHT22
 
-//DHT dht(DHTPIN, DHTTYPE);
+//MOVED 
+//#define LIGHT_SENSOR 33
+//#define DHTPIN 22
 
+//grow room service coordinator
 GrowlManager gm = GrowlManager();
 
 SSD1306  display(0x3c, 4, 15);
@@ -61,9 +61,7 @@ const char* password = "cimadaconegliano";
 
 const char* host = "192.168.0.54";
 short pc;
-
-//LIGHTSENSOR
-float Rsensor; //Resistance of sensor in K
+ 
 
 /**************************************************************************/
 /*
@@ -138,18 +136,19 @@ void loop(void)
 	delay(100);
 	digitalWrite(FAN2, LOW);
 
+	/*
 	int sensorValue = analogRead(LIGHT_SENSOR);
 	Rsensor = (float)(1023 - sensorValue) * 10 / sensorValue;
 	Serial.println("the analog read data is ");
 	Serial.println(sensorValue);
 	Serial.println("the sensor resistance is ");
 	Serial.println(Rsensor, DEC);
-
+	*/
 	delay(100);
 	digitalWrite(FAN2, LOW);
 
 	/*OLED Report*/
-	drawText();
+	
 
 	// Display the results (total active energy in Wh)
 	/*if (event.current) {
@@ -160,28 +159,18 @@ void loop(void)
 	}*/
 
 	//delay(100);
-	delay(1000);
-
-	Serial.print(gm.reportStatus().c_str());
-	/*
-	Serial.print(F("Humidity: "));
-	Serial.print(h);
-	Serial.print(F("%  Temperature: "));
-	Serial.print(t);
-	Serial.print(F("°C "));
-	Serial.print(f);
-	Serial.print(F("°F  Heat index: "));
-	Serial.print(hic);
-	Serial.print(F("°C "));
-	Serial.print(hif);
-	Serial.println(F("°F"));
-	*/
-
+	delay(500);
+	//Serial.print(gm.reportStatus().c_str());
+	drawText();
 
 	Serial.print("connecting to ");
 	Serial.println(host);
 
 	// Use WiFiClient class to create TCP connections
+	//doTestGet();
+
+}
+void doTestGet() {
 	WiFiClient client;
 	const int httpPort = 8080;
 	if (!client.connect(host, httpPort)) {
@@ -217,12 +206,11 @@ void loop(void)
 		ARDUINOJSON_NAMESPACE::DeserializationError err;
 		err = ARDUINOJSON_NAMESPACE::deserializeJson(doc, line);
 		if (err) {
-			Serial.print(F("deserializeJson() failed: "));
-			Serial.println(err.c_str());
+			//Serial.print(F("deserializeJson() failed: "));
+			//Serial.println(err.c_str());
 			continue;
 		}
 		else {
-
 			// Fetch values.
 			//
 			// Most of the time, you can rely on the implicit casts.
@@ -233,14 +221,12 @@ void loop(void)
 		}
 		break;
 	}
-
 }
-
 void drawText() {
 	display.clear();
 	display.setFont(ArialMT_Plain_10);
 	display.setTextAlignment(TEXT_ALIGN_LEFT);
-	display.drawString(0, 0, "ssss");
+	display.drawString(0, 0, gm.reportStatus().c_str());
 
 	//drawPowerProgressBar();
 	display.display();

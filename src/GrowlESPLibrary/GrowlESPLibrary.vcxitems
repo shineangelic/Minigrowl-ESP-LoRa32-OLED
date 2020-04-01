@@ -21,12 +21,12 @@
   <ItemGroup>
     <!-- <ClInclude Include="$(MSBuildThisFileDirectory)GrowlESPLibrary.h" /> -->
     <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlChamber.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)src\Sensor.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlSensor.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlChamber.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\Sensor.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlSensor.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlESPLibrary.cpp" />
   </ItemGroup>
