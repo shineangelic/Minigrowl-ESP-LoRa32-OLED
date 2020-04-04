@@ -7,24 +7,17 @@
 #include <ArduinoJson.h>
 using namespace ARDUINOJSON_NAMESPACE;
 
-void GrowlDevice::setReading(float newVal)
-{
-	_reading = newVal;
-}
-float GrowlDevice::getReading()
-{
-	return _reading;
-}
-GrowlDevice::GrowlDevice(int gpid)
+
+GrowlSensor::GrowlSensor(int gpid)
 {
 	_gpioid = gpid;
 }
 
-GrowlDevice::GrowlDevice()
+GrowlSensor::GrowlSensor()
 {
 }
 
-std::string GrowlDevice::toJSON()
+std::string GrowlSensor::toJSON()
 {
 	// Allocate the JSON document
 	//
@@ -59,13 +52,5 @@ std::string GrowlDevice::toJSON()
 	return s;
 }
 
-int GrowlDevice::getPid()
-{
-	return _gpioid;
-}
 
-void GrowlDevice::setPid(int pid)
-{
-	_gpioid = pid;
-}
 

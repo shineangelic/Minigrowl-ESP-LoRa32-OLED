@@ -33,7 +33,7 @@ private:
 	short _pc;//program counter
 	GrowlChamber	_chamber;
 	std::tm			_time;
-	std::vector<GrowlDevice*> _devicesPtr;
+	std::vector<GrowlSensor*> _devicesPtr;
 	LightSensor		_lightSensor;
 	HumiditySensor  _humiditySensor;
 	TemperatureSensor _tempSensor;

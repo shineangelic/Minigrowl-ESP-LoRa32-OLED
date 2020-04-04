@@ -63,14 +63,14 @@ std::string GrowlManager::reportStatus()
 {
 	std::ostringstream ss;
 	ss << "LIGHT: ";
-	ss << this->getChamber().getMainLightsStatus() ? "ON" : "OFF";
+	ss << (this->getChamber().getMainLightsStatus() ? "ON" : "OFF");
 	ss << " HEATER: ";
 	ss << (this->getChamber().getHeatingStatus() ? "ON" : "OFF");
 	ss << "\n";
 	ss << "FAN: IN: ";
-	ss << this->getChamber().getIntakeFanStatus() ? "ON" : "OFF";
+	ss << (this->getChamber().getIntakeFanStatus() ? "ON" : "OFF");
 	ss << " - OUT: ";
-	ss << this->getChamber().getOuttakeFanStatus() ? "ON" : "OFF";
+	ss << (this->getChamber().getOuttakeFanStatus() ? "ON" : "OFF");
 	ss << "\n";
 	ss << "Hum: ";
 	ss << this->getChamber().getHumidity() << "%";
