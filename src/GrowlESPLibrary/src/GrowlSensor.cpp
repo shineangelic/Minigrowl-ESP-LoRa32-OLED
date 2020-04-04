@@ -7,62 +7,65 @@
 #include <ArduinoJson.h>
 using namespace ARDUINOJSON_NAMESPACE;
 
-void GrowlSensor::setReading(float newVal)
+void GrowlDevice::setReading(float newVal)
 {
 	_reading = newVal;
 }
-float GrowlSensor::getReading()
+float GrowlDevice::getReading()
 {
-    return _reading;
+	return _reading;
 }
-GrowlSensor::GrowlSensor(int gpid)
+GrowlDevice::GrowlDevice(int gpid)
 {
 	_gpioid = gpid;
 }
 
-std::string GrowlSensor::toJSON()
+GrowlDevice::GrowlDevice()
 {
-  // Allocate the JSON document
-  //
-  // Inside the brackets, 200 is the RAM allocated to this document.
-  // Don't forget to change this value to match your requirement.
-  // Use arduinojson.org/v6/assistant to compute the capacity.
-    StaticJsonDocument<200> doc;
-
-    // StaticJsonObject allocates memory on the stack, it can be
-    // replaced by DynamicJsonDocument which allocates in the heap.
-    //
-    // DynamicJsonDocument  doc(200);
-
-    // Add values in the document
-    //
-    std::string t(1, _sensortype);
-    doc["typ"] = t;
-    doc["val"] = _reading;
-    doc["id"] = _gpioid;
-    doc["err"] = _errorPresent;
-    doc["unt"] = _unit;
-
-    // Add an array.
-    //
-    /*JsonArray data = doc.createNestedArray("data");
-    data.add(48.756080);
-    data.add(2.302038);*/
- 
-    std::string s("");
-    serializeJson(doc, s);
-    
-    return s;
 }
 
-int GrowlSensor::getPid()
+std::string GrowlDevice::toJSON()
+{
+	// Allocate the JSON document
+	//
+	// Inside the brackets, 200 is the RAM allocated to this document.
+	// Don't forget to change this value to match your requirement.
+	// Use arduinojson.org/v6/assistant to compute the capacity.
+	StaticJsonDocument<200> doc;
+
+	// StaticJsonObject allocates memory on the stack, it can be
+	// replaced by DynamicJsonDocument which allocates in the heap.
+	//
+	// DynamicJsonDocument  doc(200);
+
+	// Add values in the document
+	//
+	std::string t(1, _sensortype);
+	doc["typ"] = t;
+	doc["val"] = _reading;
+	doc["id"] = _gpioid;
+	doc["err"] = _errorPresent;
+	doc["unt"] = _unit;
+
+	// Add an array.
+	//
+	/*JsonArray data = doc.createNestedArray("data");
+	data.add(48.756080);
+	data.add(2.302038);*/
+
+	std::string s("");
+	serializeJson(doc, s);
+
+	return s;
+}
+
+int GrowlDevice::getPid()
 {
 	return _gpioid;
 }
 
-void GrowlSensor::setPid(int pid)
+void GrowlDevice::setPid(int pid)
 {
-    _gpioid = pid;
+	_gpioid = pid;
 }
- 
- 
+

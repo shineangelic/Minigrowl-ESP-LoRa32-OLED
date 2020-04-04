@@ -1,13 +1,14 @@
 #pragma once
 #include <ctime>
 #include <iostream>
-class GrowlSensor
+class GrowlDevice
 {
 
 public:
 	void setReading(float newVal);
 	float getReading();
-	GrowlSensor(int gpid);
+	GrowlDevice(int gpid);
+	GrowlDevice();
 	std::string toJSON();
 	int getPid();
 	void setPid(int pid);
@@ -19,23 +20,32 @@ protected:
 	bool		_errorPresent;
 };
 
-class LightSensor : public GrowlSensor {
+class LightSensor : public GrowlDevice {
 public:
-	LightSensor(int gpid) : GrowlSensor(gpid) {
+	LightSensor(int gpid) : GrowlDevice(gpid) {
+		_sensortype = 'L';
+	};
+	LightSensor() : GrowlDevice() {
 		_sensortype = 'L';
 	};
 };
 
-class TemperatureSensor : public GrowlSensor {
+class TemperatureSensor : public GrowlDevice {
 public:
-	TemperatureSensor(int gpid) : GrowlSensor(gpid) {
+	TemperatureSensor(int gpid) : GrowlDevice(gpid) {
+		_sensortype = 'T';
+	};
+	TemperatureSensor() : GrowlDevice() {
 		_sensortype = 'T';
 	};
 };
 
-class HumiditySensor : public GrowlSensor {
+class HumiditySensor : public GrowlDevice {
 public:
-	HumiditySensor(int gpid) : GrowlSensor(gpid) {
+	HumiditySensor(int gpid) : GrowlDevice(gpid) {
+		_sensortype = 'H';
+	};
+	HumiditySensor() : GrowlDevice() {
 		_sensortype = 'H';
 	};
 };

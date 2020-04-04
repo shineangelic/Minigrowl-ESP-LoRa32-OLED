@@ -23,7 +23,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlSensor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\Ale\source\repos\Minigrowl\src\GrowlESPLibrary\src\GrowlCommand.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlCommand.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -44,7 +44,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlSensor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\Ale\source\repos\Minigrowl\src\GrowlESPLibrary\src\GrowlCommand.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlCommand.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

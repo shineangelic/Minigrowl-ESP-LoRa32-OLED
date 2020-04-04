@@ -9,14 +9,13 @@
 
 #include <GrowlSensor.h>
 
-#define DHTPIN 22 
-#define DHTTYPE DHT22
+
 
 class GrowlChamber
 {
 
 public:
-	GrowlChamber();
+	GrowlChamber(uint8_t dht_pin, uint8_t dht_type) : _dht(dht_pin, dht_type) {};
 	void init();
 	void loop();
 	bool getMainLightsStatus();
@@ -32,9 +31,14 @@ public:
 	void setOuttakeFanPin(int HWPIN);
 	void setHeaterPin(int HWPIN);
 	void setLightSensorPin(int HWPIN);
+	int getMainLightsPin( );
+	int getIntakeFanPin( );
+	int getOuttakeFanPin( );
+	int getHeaterPin( );
+	int getLightSensorPin( );
 	float getTemperature();
 	float getHumidity();
-	float getLumen();
+	int getLumen();//NOT real Lumen!
 private:
 	int _mainLightPIN;
 	int _intakePIN;
@@ -46,6 +50,6 @@ private:
 	bool _isIntakeFanON;
 	bool _isOuttakeON;
 	bool _isHeaterON;
-	//LightSensor _lightSensor(LIGHT_SENSOR);
+	DHT _dht;
 };
 

@@ -2,7 +2,7 @@
 #include <DHT.h>
 
 
-DHT _dht(DHTPIN, DHTTYPE);
+//DHT _dht(dhtpin, DHTTYPE);
 void GrowlChamber::init()
 {
 	_dht.begin();
@@ -12,6 +12,11 @@ void GrowlChamber::loop()
 {
 	//trigger REAL READ
 	float f = _dht.readTemperature(false, true);
+	digitalWrite(_mainLightPIN, _isMainLightsON);
+	digitalWrite(_intakePIN, _isIntakeFanON);
+	digitalWrite(_outtakePIN, _isOuttakeON);
+	digitalWrite(_heaterPIN, _isHeaterON);
+	
 }
 
 bool GrowlChamber::getMainLightsStatus()
@@ -37,28 +42,28 @@ bool GrowlChamber::getHeatingStatus()
 bool GrowlChamber::switchMainLights(bool on)
 {
 	_isMainLightsON = on;
-	digitalWrite(_mainLightPIN, on);
+	digitalWrite(_mainLightPIN, _isMainLightsON);
 	return _isMainLightsON;
 }
 
 bool GrowlChamber::switchIntakeFan(bool on)
 {
 	_isIntakeFanON = on;
-	digitalWrite(_intakePIN, on);
+	digitalWrite(_intakePIN, _isIntakeFanON);
 	return _isIntakeFanON;
 }
 
 bool GrowlChamber::switchOuttakeFan(bool on)
 {
 	_isOuttakeON = on;
-	digitalWrite(_outtakePIN, on);
+	digitalWrite(_outtakePIN, _isOuttakeON);
 	return _isOuttakeON;
 }
 
 bool GrowlChamber::switchHeater(bool on)
 {
 	_isHeaterON = on;
-	digitalWrite(_heaterPIN, on);
+	digitalWrite(_heaterPIN, _isHeaterON);
 	return _isHeaterON;
 }
 
@@ -87,9 +92,34 @@ void GrowlChamber::setLightSensorPin(int HWPIN)
 	_lightSensorPIN = HWPIN;
 }
 
+int GrowlChamber::getMainLightsPin()
+{
+	return _mainLightPIN;
+}
+
+int GrowlChamber::getIntakeFanPin()
+{
+	return _intakePIN;
+}
+
+int GrowlChamber::getOuttakeFanPin()
+{
+	return _outtakePIN;
+}
+
+int GrowlChamber::getHeaterPin()
+{
+	return _heaterPIN;
+}
+
+int GrowlChamber::getLightSensorPin()
+{
+	return _lightSensorPIN;
+}
+
 float GrowlChamber::getTemperature()
 {
-	
+
 	float t = _dht.readTemperature(false, false);
 	//float f = _dht.readTemperature(false, true);
 
@@ -113,10 +143,10 @@ float GrowlChamber::getHumidity()
 	return h;
 }
 
-float GrowlChamber::getLumen()
+int GrowlChamber::getLumen()
 {
-	int sensorValue = analogRead(_lightSensorPIN);
-	return (float)(1023 - sensorValue) * 10 / sensorValue;
+	return analogRead(_lightSensorPIN);
+	//return (float)(1023 - sensorValue) * 10 / sensorValue;
 	/*Serial.println("the analog read data is ");
 	Serial.println(sensorValue);
 	Serial.println("the sensor resistance is ");
@@ -124,6 +154,3 @@ float GrowlChamber::getLumen()
 	return 0.0f;*/
 }
 
-GrowlChamber::GrowlChamber()
-{ 
-}

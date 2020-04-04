@@ -49,12 +49,15 @@ Connect 15 to RX of SI UART
 
 #define LIGHT_SENSOR 33
 
+#define DHTPIN 22 
+#define DHTTYPE DHT22
+#define DHT_DEBUG 1
 //MOVED 
 //#define LIGHT_SENSOR 33
 //#define DHTPIN 22
 
 //grow room service coordinator
-GrowlManager gm = GrowlManager();
+GrowlManager gm = GrowlManager(DHTPIN, DHTTYPE);
 
 SSD1306  display(0x3c, 4, 15);
 //WIFI
@@ -72,7 +75,7 @@ Arduino setup function (automatically called at startup)
 /**************************************************************************/
 void setup(void)
 {
-	gm.init();
+	
 	pinMode(MAIN_LIGHTS, OUTPUT);
 	gm.setMainLightsPin(MAIN_LIGHTS);
 
@@ -88,6 +91,8 @@ void setup(void)
 	gm.setLightSensorPin(LIGHT_SENSOR);
 	pinMode(LIGHT_SENSOR, INPUT);
 
+	gm.initChamber();
+
 	pinMode(OLED, OUTPUT);
 	digitalWrite(OLED, LOW);    // set GPIO16 low to reset OLED
 	delay(50);
@@ -96,9 +101,9 @@ void setup(void)
 	display.init();
 	display.setLogBuffer(5, 30);
 	Serial.begin(57600);
-	displaySensorDetails();
+
 	//Growlmanager init
-	gm.init();
+	gm.initChamber();
 
 	WiFi.begin(ssid, password);
 
@@ -113,23 +118,6 @@ void setup(void)
 	Serial.println(WiFi.localIP());
 	pc = 0;//program counter
 }
-
-/**************************************************************************/
-/*
-Displays some basic information on this sensor from the unified
-sensor API sensor_t type (see Adafruit_Sensor for more information)
-*/
-/**************************************************************************/
-void displaySensorDetails(void)
-{
-
-	Serial.println("------------------------------------");
-
-	Serial.println("------------------------------------");
-	Serial.println("");
-	delay(500);
-}
-
 
 
 void loop(void)
@@ -224,14 +212,4 @@ void drawText() {
 	//drawPowerProgressBar();
 	display.display();
 	display.clear();
-}
-
-void drawPowerProgressBar() {
-	float progress = 22 * 100;
-	// draw the progress bar
-	display.drawProgressBar(0, 52, 80, 8, progress);
-
-	// draw the percentage as String
-	display.setTextAlignment(TEXT_ALIGN_CENTER);
-	display.drawString(102, 50, String(23) + "W");
 }
