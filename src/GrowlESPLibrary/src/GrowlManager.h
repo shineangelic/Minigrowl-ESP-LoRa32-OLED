@@ -17,15 +17,19 @@ public:
 	void init();
 	void loop();
 	std::string reportStatus();
-
 	std::tm	getGrowlManagerTime();
 	GrowlChamber getChamber();
 	void setMainLightsPin(int HWPIN);
+	void setIntakeFanPin(int HWPIN);
+	void setOuttakeFanPin(int HWPIN);
+	void setHeaterPin(int HWPIN);
+	void setLightSensorPin(int HWPIN);
 private:
 	void sendCurrentSensors();
 	short _pc;//program counter
 	GrowlChamber _chamber;
 	std::tm _time;
+
 	
 };
 

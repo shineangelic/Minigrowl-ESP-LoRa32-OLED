@@ -5,14 +5,17 @@ class GrowlSensor
 {
 
 public:
-	void setReading(std::string newVal);
+	void setReading(float newVal);
+	float getReading();
 	GrowlSensor(int gpid);
 	std::string toJSON();
+	int getPid();
+	void setPid(int pid);
 protected:
 	int			_gpioid;
 	char		_sensortype;
-	std::string	_reading;
-	char		_uinit;
+	float		_reading;
+	char		_unit;
 	bool		_errorPresent;
 };
 

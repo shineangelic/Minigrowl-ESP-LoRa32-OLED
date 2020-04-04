@@ -1,12 +1,19 @@
 #include "GrowlSensor.h"
+#include <iostream>
+#include <string>
 
 #define ARDUINOJSON_ENABLE_STD_STRING 1
 #include <ArduinoJson.hpp>
 #include <ArduinoJson.h>
+using namespace ARDUINOJSON_NAMESPACE;
 
-void GrowlSensor::setReading(std::string newVal)
+void GrowlSensor::setReading(float newVal)
 {
 	_reading = newVal;
+}
+float GrowlSensor::getReading()
+{
+    return _reading;
 }
 GrowlSensor::GrowlSensor(int gpid)
 {
@@ -29,10 +36,12 @@ std::string GrowlSensor::toJSON()
 
     // Add values in the document
     //
-    doc["Typ"] = _sensortype;
-    doc["Val"] = _reading;
-    doc["PID"] = _gpioid;
-    doc["ERR"] = _errorPresent;
+    std::string t(1, _sensortype);
+    doc["typ"] = t;
+    doc["val"] = _reading;
+    doc["id"] = _gpioid;
+    doc["err"] = _errorPresent;
+    doc["unt"] = _unit;
 
     // Add an array.
     //
@@ -44,6 +53,16 @@ std::string GrowlSensor::toJSON()
     serializeJson(doc, s);
     
     return s;
+}
+
+int GrowlSensor::getPid()
+{
+	return _gpioid;
+}
+
+void GrowlSensor::setPid(int pid)
+{
+    _gpioid = pid;
 }
  
  

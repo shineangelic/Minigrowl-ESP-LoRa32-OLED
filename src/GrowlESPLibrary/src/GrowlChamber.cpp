@@ -5,9 +5,7 @@
 DHT _dht(DHTPIN, DHTTYPE);
 void GrowlChamber::init()
 {
-	
 	_dht.begin();
-
 }
 
 void GrowlChamber::loop()
@@ -21,17 +19,72 @@ bool GrowlChamber::getMainLightsStatus()
 	return _isMainLightsON;
 }
 
+bool GrowlChamber::getIntakeFanStatus()
+{
+	return _isIntakeFanON;
+}
+
+bool GrowlChamber::getOuttakeFanStatus()
+{
+	return _isOuttakeON;
+}
+
+bool GrowlChamber::getHeatingStatus()
+{
+	return _isHeaterON;
+}
+
 bool GrowlChamber::switchMainLights(bool on)
 {
 	_isMainLightsON = on;
 	digitalWrite(_mainLightPIN, on);
-
 	return _isMainLightsON;
+}
+
+bool GrowlChamber::switchIntakeFan(bool on)
+{
+	_isIntakeFanON = on;
+	digitalWrite(_intakePIN, on);
+	return _isIntakeFanON;
+}
+
+bool GrowlChamber::switchOuttakeFan(bool on)
+{
+	_isOuttakeON = on;
+	digitalWrite(_outtakePIN, on);
+	return _isOuttakeON;
+}
+
+bool GrowlChamber::switchHeater(bool on)
+{
+	_isHeaterON = on;
+	digitalWrite(_heaterPIN, on);
+	return _isHeaterON;
 }
 
 void GrowlChamber::setMainLightsPin(int HWPIN)
 {
 	_mainLightPIN = HWPIN;
+}
+
+void GrowlChamber::setIntakeFanPin(int HWPIN)
+{
+	_intakePIN = HWPIN;
+}
+
+void GrowlChamber::setOuttakeFanPin(int HWPIN)
+{
+	_outtakePIN = HWPIN;
+}
+
+void GrowlChamber::setHeaterPin(int HWPIN)
+{
+	_heaterPIN = HWPIN;
+}
+
+void GrowlChamber::setLightSensorPin(int HWPIN)
+{
+	_lightSensorPIN = HWPIN;
 }
 
 float GrowlChamber::getTemperature()
@@ -48,7 +101,6 @@ float GrowlChamber::getTemperature()
 	return t;
 	//float hif = _dht.computeHeatIndex(f, h);
 	//float hic = _dht.computeHeatIndex(t, h, false);
-
 }
 
 float GrowlChamber::getHumidity()
@@ -63,7 +115,7 @@ float GrowlChamber::getHumidity()
 
 float GrowlChamber::getLumen()
 {
-	int sensorValue = analogRead(LIGHT_SENSOR);
+	int sensorValue = analogRead(_lightSensorPIN);
 	return (float)(1023 - sensorValue) * 10 / sensorValue;
 	/*Serial.println("the analog read data is ");
 	Serial.println(sensorValue);

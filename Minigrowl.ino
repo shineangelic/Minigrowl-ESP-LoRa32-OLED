@@ -43,9 +43,11 @@ Connect 15 to RX of SI UART
 // GPIO26 -- SX1278's IRQ(Interrupt Request)
 #define MAIN_LIGHTS 25//onboardLED
 #define HEATER  12
-#define FAN  13
+#define OUTTAKE_FAN  13
 #define OLED  16
-#define FAN2  2
+#define INTAKE_FAN  2
+
+#define LIGHT_SENSOR 33
 
 //MOVED 
 //#define LIGHT_SENSOR 33
@@ -74,15 +76,22 @@ void setup(void)
 	pinMode(MAIN_LIGHTS, OUTPUT);
 	gm.setMainLightsPin(MAIN_LIGHTS);
 
-	pinMode(FAN2, OUTPUT);
-	pinMode(FAN, OUTPUT);
+	pinMode(INTAKE_FAN, OUTPUT);
+	gm.setIntakeFanPin(INTAKE_FAN);
+
+	pinMode(OUTTAKE_FAN, OUTPUT);
+	gm.setOuttakeFanPin(OUTTAKE_FAN);
+
 	pinMode(HEATER, OUTPUT);
+	gm.setHeaterPin(HEATER);
+
+	gm.setLightSensorPin(LIGHT_SENSOR);
 	pinMode(LIGHT_SENSOR, INPUT);
+
 	pinMode(OLED, OUTPUT);
 	digitalWrite(OLED, LOW);    // set GPIO16 low to reset OLED
 	delay(50);
 	digitalWrite(OLED, HIGH); // while OLED is running, must set GPIO16 in high
-	//dht.begin();
 
 	display.init();
 	display.setLogBuffer(5, 30);
@@ -126,26 +135,8 @@ void displaySensorDetails(void)
 void loop(void)
 {
 	gm.loop();
-	digitalWrite(HEATER, LOW);    // set GPIO16 low to reset OLED
-	digitalWrite(FAN2, HIGH);
-	digitalWrite(FAN, HIGH);
-	delay(100);
-
-	digitalWrite(FAN, LOW);
-	digitalWrite(HEATER, HIGH);
-	delay(100);
-	digitalWrite(FAN2, LOW);
-
-	/*
-	int sensorValue = analogRead(LIGHT_SENSOR);
-	Rsensor = (float)(1023 - sensorValue) * 10 / sensorValue;
-	Serial.println("the analog read data is ");
-	Serial.println(sensorValue);
-	Serial.println("the sensor resistance is ");
-	Serial.println(Rsensor, DEC);
-	*/
-	delay(100);
-	digitalWrite(FAN2, LOW);
+ 
+	delay(100); 
 
 	/*OLED Report*/
 	
@@ -167,9 +158,10 @@ void loop(void)
 	Serial.println(host);
 
 	// Use WiFiClient class to create TCP connections
-	//doTestGet();
+	doTestGet();
 
 }
+
 void doTestGet() {
 	WiFiClient client;
 	const int httpPort = 8080;
@@ -222,6 +214,7 @@ void doTestGet() {
 		break;
 	}
 }
+
 void drawText() {
 	display.clear();
 	display.setFont(ArialMT_Plain_10);
