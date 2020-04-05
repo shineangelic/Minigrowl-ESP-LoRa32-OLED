@@ -14,7 +14,7 @@ const char* host = "192.168.0.54:8080";
 
 //LightSensor		_lightSensor(LIGHT_SENSOR);
 //HumiditySensor  _humidity(DHTPIN);
- 
+
 //the pin has to be already set
 void GrowlManager::initChamber()
 {
@@ -68,8 +68,10 @@ void GrowlManager::loop()
 
 	//applyServerCommands();
 
-	sendCurrentSensors();
-
+	if (_pc % 2 == 0)
+		sendCurrentSensors();
+	else
+		sendActuators();
 }
 
 void GrowlManager::sendCurrentSensors()

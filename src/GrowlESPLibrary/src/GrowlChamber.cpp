@@ -9,7 +9,7 @@ uses beegee-tokyo DHT lib
 
 void tempTask(void* pvParameters);
 void triggerGetTemp();
-float getTemperatureTask();
+void retrieveTemperatureTask();
 
 
 /** Task handle for the light value read task */
@@ -113,7 +113,7 @@ void tempTask(void* pvParameters) {
 	{
 		if (tasksEnabled) {
 			// Get temperature values
-			getTemperatureTask();
+			retrieveTemperatureTask();
 		}
 		// Got sleep again
 		vTaskSuspend(NULL);
@@ -127,14 +127,14 @@ void tempTask(void* pvParameters) {
  *    true if temperature could be aquired
  *    false if aquisition failed
 */
-float getTemperatureTask() {
+void retrieveTemperatureTask() {
 	// Reading temperature for humidity takes about 250 milliseconds!
 	// Sensor readings may also be up to 2 seconds 'old' (it's a very slow sensor)
 	TempAndHumidity newValues = _dht.getTempAndHumidity();
 	// Check if any reads failed and exit early (to try again).
 	if (_dht.getStatus() != 0) {
 		Serial.println("DHT22 error status: " + String(_dht.getStatusString()));
-		return false;
+		return;
 	}
 
 	float heatIndex = _dht.computeHeatIndex(newValues.temperature, newValues.humidity);
@@ -176,8 +176,8 @@ float getTemperatureTask() {
 	};
 	_curTemp = newValues.temperature;
 	_curHum = newValues.humidity;
-	Serial.println(" T:" + String(newValues.temperature) + " H:" + String(newValues.humidity) + " I:" + String(heatIndex) + " D:" + String(dewPoint) + " " + comfortStatus);
-	return newValues.temperature;
+	Serial.println("DHT22 update:" + String(newValues.temperature) + " H:" + String(newValues.humidity) + " I:" + String(heatIndex) + " D:" + String(dewPoint) + " " + comfortStatus);
+ 
 }
 
 
@@ -292,30 +292,9 @@ float GrowlChamber::getTemperature()
 
 float GrowlChamber::getHumidity()
 {
-	/*float h = _dht.getHumidity();
-	if (isnan(h)) {
-		Serial.println(F("Failed to read from DHT sensor!"));
-		return -1;
-	}*/
+	//object for static? Im no good at C++ :(
 	return _curHum;
 }
-/*
-float GrowlChamber::getTemperature()
-{
-
-	float t = _dht.getTemperature();
-	//float f = _dht.readTemperature(false, true);
-
-	if (isnan(t)) {
-		Serial.println(F("Failed to read from DHT sensor!"));
-		return -1;
-	}
-
-	return t;
-	//float hif = _dht.computeHeatIndex(f, h);
-	//float hic = _dht.computeHeatIndex(t, h, false);
-}
-*/
 
 
 int GrowlChamber::getLumen()
