@@ -11,8 +11,9 @@
 #endif
 
 #include <GrowlSensor.h>
+#include <GrowlActuator.h>
 #include <ctime>
-#include "GrowlChamber.h"
+#include <GrowlChamber.h>
 
 class GrowlManager
 {
@@ -33,9 +34,13 @@ private:
 	short _pc;//program counter
 	GrowlChamber	_chamber;
 	std::tm			_time;
-	std::vector<GrowlSensor*> _devicesPtr;
+	std::vector<GrowlSensor*> _sensorsPtr;
+	std::vector<GrowlActuator*> _actuatorsPtr;
 	LightSensor		_lightSensor;
 	HumiditySensor  _humiditySensor;
 	TemperatureSensor _tempSensor;
+	MainLights _mainLights;
+	Fan		_inTakeFan;
+	Fan		_outTakeFan;
 };
 

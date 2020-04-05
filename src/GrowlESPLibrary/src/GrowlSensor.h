@@ -11,11 +11,9 @@ public:
 	std::string toJSON();
 
 protected:
-
 	char		_sensortype;
-
 	char		_unit;
-	bool		_errorPresent;
+
 };
 
 class LightSensor : public GrowlSensor {

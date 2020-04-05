@@ -24,7 +24,7 @@ std::string GrowlSensor::toJSON()
 	// Inside the brackets, 200 is the RAM allocated to this document.
 	// Don't forget to change this value to match your requirement.
 	// Use arduinojson.org/v6/assistant to compute the capacity.
-	StaticJsonDocument<200> doc;
+	StaticJsonDocument<400> doc;
 
 	// StaticJsonObject allocates memory on the stack, it can be
 	// replaced by DynamicJsonDocument which allocates in the heap.

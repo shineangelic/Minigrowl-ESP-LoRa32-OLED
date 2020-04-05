@@ -23,9 +23,13 @@ void GrowlManager::initChamber()
 	//_humiditySensor.setPid(_chamber.getHimiditySensorPin());
 	//_tempSensor.setPid(_chamber.getTempSensorPin());
 	//sendCurrentSensors();
-	_devicesPtr.push_back(&_lightSensor);
-	_devicesPtr.push_back(&_tempSensor);
-	_devicesPtr.push_back(&_humiditySensor);
+	_sensorsPtr.push_back(&_lightSensor);
+	_sensorsPtr.push_back(&_tempSensor);
+	_sensorsPtr.push_back(&_humiditySensor);
+
+	_actuatorsPtr.push_back(&_inTakeFan);
+	_actuatorsPtr.push_back(&_outTakeFan);
+	_actuatorsPtr.push_back(&_mainLights);
 }
 
 void GrowlManager::loop()
@@ -49,6 +53,10 @@ void GrowlManager::loop()
 	_lightSensor.setReading(luxR);
 	_humiditySensor.setReading(hum);
 	_tempSensor.setReading(temp);
+
+	_mainLights.setReading(_chamber.getMainLightsStatus());
+	_outTakeFan.setReading(_chamber.getOuttakeFanStatus());
+	_inTakeFan.setReading(_chamber.getIntakeFanStatus());
 
 	//retrieveServerCommands();
 
@@ -146,6 +154,9 @@ void GrowlManager::sendCurrentSensors()
 		"Connection: close\r\n\r\n");*/
 	Serial.print("HTTP REQ:");
 	Serial.println(_lightSensor.toJSON().c_str());
+
+	Serial.println(_mainLights.toJSON().c_str());
+
 	http.begin(String("http://") + host + url); //Specify destination for HTTP request
 	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
 	int httpResponseCode = http.PUT(_lightSensor.toJSON().c_str()); //Send the actual POST request

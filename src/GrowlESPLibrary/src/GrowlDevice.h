@@ -9,6 +9,8 @@ public:
 protected:
 	int			_gpioid;
 	float		_reading;
-
+	bool		_errorPresent;
 };
+
+
 
