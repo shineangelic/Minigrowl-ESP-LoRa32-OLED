@@ -18,7 +18,9 @@
 class GrowlManager
 {
 public:
-	GrowlManager(uint8_t dht_pin, uint8_t dht_type) : _chamber(dht_pin, dht_type) {};
+	GrowlManager(uint8_t dht_pin, uint8_t dht_type) : _chamber(dht_pin, dht_type) {
+		_dht_pin = dht_pin;
+	};
 	void initChamber();
 	void loop();
 	std::string reportStatus();
@@ -31,6 +33,7 @@ public:
 	void setLightSensorPin(int HWPIN);
 private:
 	void sendCurrentSensors();
+	void sendActuators();
 	short _pc;//program counter
 	GrowlChamber	_chamber;
 	std::tm			_time;
@@ -42,5 +45,6 @@ private:
 	MainLights _mainLights;
 	Fan		_inTakeFan;
 	Fan		_outTakeFan;
+	int _dht_pin;
 };
 

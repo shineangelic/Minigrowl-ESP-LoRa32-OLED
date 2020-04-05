@@ -9,6 +9,7 @@ public:
 	GrowlCommand(std::string name, int value);
 	JsonObject toJSON();
 private:
+	int _targetId = -1;
 	std::string _name;
 	int _value;
 };

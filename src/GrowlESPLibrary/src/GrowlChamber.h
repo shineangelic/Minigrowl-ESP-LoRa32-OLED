@@ -15,7 +15,12 @@ class GrowlChamber
 {
 
 public:
-	GrowlChamber(uint8_t dht_pin, uint8_t dht_type) : _dht(dht_pin, dht_type) {};
+	GrowlChamber(uint8_t dht_pin, uint8_t dht_type) : _dht(dht_pin, dht_type) {
+		_dht = DHT(dht_pin, dht_type);
+		Serial.print("GrowlChamber constructor, DHT pin=");
+		Serial.println(dht_pin);
+		_dht.begin();
+	};
 	void init();
 	void loop();
 	bool getMainLightsStatus();

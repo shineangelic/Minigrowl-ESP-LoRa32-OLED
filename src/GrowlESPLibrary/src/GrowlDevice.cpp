@@ -17,3 +17,8 @@ float GrowlDevice::getReading()
 {
 	return _reading;
 }
+
+void GrowlDevice::setHasError(float inErr)
+{
+	_errorPresent = inErr;
+}

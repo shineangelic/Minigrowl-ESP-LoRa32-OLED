@@ -26,10 +26,10 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlCommand.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\Ale\source\repos\Minigrowl\src\GrowlESPLibrary\src\GrowlDevice.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlActuator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\Ale\source\repos\Minigrowl\src\GrowlESPLibrary\src\GrowlActuator.cpp">
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,10 +53,10 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlCommand.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\Ale\source\repos\Minigrowl\src\GrowlESPLibrary\src\GrowlDevice.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlActuator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\Ale\source\repos\Minigrowl\src\GrowlESPLibrary\src\GrowlActuator.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlDevice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,17 +1,20 @@
 #include "GrowlChamber.h"
 #include <DHT.h>
 
-
-//DHT _dht(dhtpin, DHTTYPE);
+ 
 void GrowlChamber::init()
 {
-	_dht.begin();
+ 
+	//_dht.begin();
 }
 
 void GrowlChamber::loop()
 {
 	//trigger REAL READ
-	float f = _dht.readTemperature(false, true);
+	float t = _dht.readTemperature(false, true);
+	if (isnan(t)) {
+		Serial.println(F("Failed REAL READ from DHT sensor!"));
+	}
 	digitalWrite(_mainLightPIN, _isMainLightsON);
 	digitalWrite(_intakePIN, _isIntakeFanON);
 	digitalWrite(_outtakePIN, _isOuttakeON);
@@ -116,6 +119,7 @@ int GrowlChamber::getLightSensorPin()
 {
 	return _lightSensorPIN;
 }
+
 
 float GrowlChamber::getTemperature()
 {

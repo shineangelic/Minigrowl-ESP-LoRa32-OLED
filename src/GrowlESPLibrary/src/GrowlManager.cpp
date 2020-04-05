@@ -6,9 +6,11 @@
 #include <ostream>
 
 #include "GrowlManager.h"
-#define LIGHT_SENSOR 33
-//#define DHTPIN 22 
-//#define DHTTYPE DHT22
+//used to define "same GPIO" sensors (tipo DHT)
+#define MAX_SENSORS 8
+
+
+const char* host = "192.168.0.54:8080";
 
 //LightSensor		_lightSensor(LIGHT_SENSOR);
 //HumiditySensor  _humidity(DHTPIN);
@@ -20,6 +22,8 @@ void GrowlManager::initChamber()
 	_chamber.init();
 	//_chamber.setLightSensorPin(LIGHT_SENSOR);
 	_lightSensor.setPid(_chamber.getLightSensorPin());
+	_tempSensor.setPid(_dht_pin);//received in constructor
+	_humiditySensor.setPid(_dht_pin + MAX_SENSORS);//received in constructor
 	//_humiditySensor.setPid(_chamber.getHimiditySensorPin());
 	//_tempSensor.setPid(_chamber.getTempSensorPin());
 	//sendCurrentSensors();
@@ -34,12 +38,14 @@ void GrowlManager::initChamber()
 
 void GrowlManager::loop()
 {
+	_chamber.loop();
 	_pc++;
 	_chamber.switchHeater(true);
 	_chamber.switchIntakeFan(true);
 	_chamber.switchOuttakeFan(true);
-	delay(200);
 	_chamber.switchMainLights(true);
+
+	delay(200);
 
 	//LIFECYCLE
 
@@ -64,8 +70,73 @@ void GrowlManager::loop()
 
 	sendCurrentSensors();
 
-	_chamber.loop();
 }
+
+void GrowlManager::sendCurrentSensors()
+{
+	WiFiClient client;
+	HTTPClient http;
+	/*const int httpPort = 8080;
+	if (!client.connect(host, httpPort)) {
+		Serial.println("connection failed");
+		return;
+	}*/
+
+	// We now create a URI for the request
+	String url = "/api/esp/v1/sensors/id/";
+	url += _lightSensor.getPid();
+
+	Serial.print("Send sensor: ");
+	Serial.println(url);
+
+	// This will send the request to the server
+	/*client.print(String("PUT ") + url + " HTTP/1.1\r\n" +
+		"Host: " + host + "\r\n" +
+		"Connection: close\r\n\r\n");*/
+	GrowlSensor* toSend = _sensorsPtr.at(_pc % _sensorsPtr.size());
+
+	Serial.print("HTTP REQ:");
+	Serial.println(toSend->toJSON().c_str());
+
+	http.begin(String("http://") + host + url); //Specify destination for HTTP request
+	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
+	int httpResponseCode = http.PUT(toSend->toJSON().c_str()); //Send the actual POST request
+
+	Serial.print("HTTP RESPONSE:");
+	Serial.println(httpResponseCode);
+	//Serial.println(_lightSensor.toJSON().c_str());
+}
+
+void GrowlManager::sendActuators()
+{
+	WiFiClient client;
+	HTTPClient http;
+	GrowlActuator* toSend = _actuatorsPtr.at(_pc % _sensorsPtr.size());
+	/*const int httpPort = 8080;
+	if (!client.connect(host, httpPort)) {
+		Serial.println("connection failed");
+		return;
+	}*/
+
+	// We now create a URI for the request
+	String url = "/api/esp/v1/actuators/id/";
+	url += toSend->getPid();
+
+	Serial.print("Send actuator: ");
+	Serial.println(url);
+
+	Serial.print("HTTP REQ:");
+
+	Serial.println(toSend->toJSON().c_str());
+
+	http.begin(String("http://") + host + url); //Specify destination for HTTP request
+	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
+	int httpResponseCode = http.PUT(toSend->toJSON().c_str()); //Send the actual POST request
+
+	Serial.print("HTTP RESPONSE:");
+	Serial.println(httpResponseCode);
+}
+
 
 std::string GrowlManager::reportStatus()
 {
@@ -128,40 +199,3 @@ void GrowlManager::setLightSensorPin(int HWPIN)
 	_chamber.setLightSensorPin(HWPIN);
 }
 
-void GrowlManager::sendCurrentSensors()
-{
-	WiFiClient client;
-	HTTPClient http;
-
-
-	const char* host = "192.168.0.54:8080";
-	/*const int httpPort = 8080;
-	if (!client.connect(host, httpPort)) {
-		Serial.println("connection failed");
-		return;
-	}*/
-
-	// We now create a URI for the request
-	String url = "/api/esp/v1/sensors/id/";
-	url += _lightSensor.getPid();
-
-	Serial.print("Requesting URL: ");
-	Serial.println(url);
-
-	// This will send the request to the server
-	/*client.print(String("PUT ") + url + " HTTP/1.1\r\n" +
-		"Host: " + host + "\r\n" +
-		"Connection: close\r\n\r\n");*/
-	Serial.print("HTTP REQ:");
-	Serial.println(_lightSensor.toJSON().c_str());
-
-	Serial.println(_mainLights.toJSON().c_str());
-
-	http.begin(String("http://") + host + url); //Specify destination for HTTP request
-	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
-	int httpResponseCode = http.PUT(_lightSensor.toJSON().c_str()); //Send the actual POST request
-
-	Serial.print("HTTP RESPONSE:");
-	Serial.println(httpResponseCode);
-	//Serial.println(_lightSensor.toJSON().c_str());
-}

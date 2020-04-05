@@ -16,7 +16,6 @@ Author:     CRONER\Ale
 #include <OLEDDisplay.h>
 #include <HardwareSerial.h>
 #include <SoftwareSerial.h>
-//#include <GrowlManager.h>
 #include "SSD1306.h"
 #include <WiFi.h>
 #include <GrowlManager.h> 
@@ -64,7 +63,8 @@ SSD1306  display(0x3c, 4, 15);
 const char* ssid = "Cisco66778";
 const char* password = "cimadaconegliano";
 
-const char* host = "192.168.0.54";
+
+//const char* host = "192.168.0.54";
 short pc;
  
 
@@ -101,9 +101,7 @@ void setup(void)
 	display.init();
 	display.setLogBuffer(5, 30);
 	Serial.begin(57600);
-
-	//Growlmanager init
-	gm.initChamber();
+	 
 
 	WiFi.begin(ssid, password);
 
@@ -123,8 +121,6 @@ void setup(void)
 void loop(void)
 {
 	gm.loop();
- 
-	delay(100); 
 
 	/*OLED Report*/
 	
@@ -142,14 +138,14 @@ void loop(void)
 	//Serial.print(gm.reportStatus().c_str());
 	drawText();
 
-	Serial.print("connecting to ");
-	Serial.println(host);
+	//Serial.print("connecting to ");
+	//Serial.println(host);
 
 	// Use WiFiClient class to create TCP connections
-	doTestGet();
+	//doTestGet();
 
 }
-
+/*
 void doTestGet() {
 	WiFiClient client;
 	const int httpPort = 8080;
@@ -201,7 +197,7 @@ void doTestGet() {
 		}
 		break;
 	}
-}
+}*/
 
 void drawText() {
 	display.clear();
