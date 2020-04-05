@@ -18,8 +18,8 @@
 class GrowlManager
 {
 public:
-	GrowlManager(uint8_t dht_pin) : _chamber() {
-		_dht_pin = dht_pin;
+	GrowlManager() : _chamber() {
+
 	};
 	void initChamber();
 	void loop();
@@ -47,6 +47,5 @@ private:
 	Fan		_inTakeFan;
 	Fan		_outTakeFan;
 	int _dht_pin;
-	int _dht_type;
 };
 

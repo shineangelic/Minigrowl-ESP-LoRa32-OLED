@@ -28,13 +28,29 @@ bool tasksEnabled = false;
  
 void GrowlChamber::init()
 {
- 
-	Serial.begin(115200);
-	Serial.println();
 	Serial.println("GrowlChamber init");
 	initTemp();
 	// Signal end of setup() to tasks
 	tasksEnabled = true;
+}
+
+void GrowlChamber::loop()
+{
+
+	if (!tasksEnabled) {
+		// Wait 2 seconds to let system settle down
+		delay(2000);
+		// Enable task that will read values from the DHT sensor
+		tasksEnabled = true;
+		if (tempTaskHandle != NULL) {
+			vTaskResume(tempTaskHandle);
+		}
+	}
+	yield();
+	digitalWrite(_mainLightPIN, _isMainLightsON);
+	digitalWrite(_intakePIN, _isIntakeFanON);
+	digitalWrite(_outtakePIN, _isOuttakeON);
+	digitalWrite(_heaterPIN, _isHeaterON);
 
 }
 
@@ -50,7 +66,8 @@ bool GrowlChamber::initTemp() {
 	byte resultValue = 0;
 	// Initialize temperature sensor
 	_dht.setup(_dht_pin, DHTesp::DHT22);
-	Serial.println("DHT initiated");
+	Serial.print("DHT initiated on PIN ");
+	Serial.println(_dht_pin);
 
 	// Start task to get temperature
 	xTaskCreatePinnedToCore(
@@ -163,25 +180,7 @@ float getTemperatureTask() {
 	return newValues.temperature;
 }
 
-void GrowlChamber::loop()
-{
 
-	if (!tasksEnabled) {
-		// Wait 2 seconds to let system settle down
-		delay(2000);
-		// Enable task that will read values from the DHT sensor
-		tasksEnabled = true;
-		if (tempTaskHandle != NULL) {
-			vTaskResume(tempTaskHandle);
-		}
-	}
-	yield();
-	digitalWrite(_mainLightPIN, _isMainLightsON);
-	digitalWrite(_intakePIN, _isIntakeFanON);
-	digitalWrite(_outtakePIN, _isOuttakeON);
-	digitalWrite(_heaterPIN, _isHeaterON);
-	
-}
 
 bool GrowlChamber::getMainLightsStatus()
 {

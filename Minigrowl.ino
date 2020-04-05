@@ -39,17 +39,17 @@ Connect 15 to RX of SI UART
 // GPIO14 -- SX1278's RESET
 // GPIO26 -- SX1278's IRQ(Interrupt Request)
 #define MAIN_LIGHTS 25//onboardLED
-#define HEATER  12
-#define OUTTAKE_FAN  13
-#define OLED  16
-#define INTAKE_FAN  2
+#define HEATER		12
+#define OUTTAKE_FAN	13
+#define INTAKE_FAN	2
+#define OLED		16
+
 
 #define LIGHT_SENSOR 33
-
 #define DHTPIN 22 
 
 //grow room service coordinator
-GrowlManager gm = GrowlManager(DHTPIN);
+GrowlManager gm = GrowlManager();
 
 SSD1306  display(0x3c, 4, 15);
 //WIFI
@@ -85,7 +85,7 @@ void setup(void)
 	gm.setLightSensorPin(LIGHT_SENSOR);
 	pinMode(LIGHT_SENSOR, INPUT);
 
-	gm.setDhtPin(LIGHT_SENSOR);
+	gm.setDhtPin(DHTPIN);
 	pinMode(DHTPIN, INPUT);
 
 	gm.initChamber();
