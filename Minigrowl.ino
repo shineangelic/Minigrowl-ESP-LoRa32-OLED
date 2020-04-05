@@ -4,12 +4,10 @@ Created:	03/07/2018 20:07:15
 Author:     CRONER\Ale
 */
 
+
 #include <ArduinoJson.hpp>
-#include <ArduinoJson.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
-#include <DHT_U.h>
-#include <DHT.h>
+#include <ArduinoJson.h> 
+ 
 #include <SSD1306Wire.h>
 #include <OLEDDisplayUi.h>
 #include <OLEDDisplayFonts.h>
@@ -49,14 +47,9 @@ Connect 15 to RX of SI UART
 #define LIGHT_SENSOR 33
 
 #define DHTPIN 22 
-#define DHTTYPE DHT22
-#define DHT_DEBUG 1
-//MOVED 
-//#define LIGHT_SENSOR 33
-//#define DHTPIN 22
 
 //grow room service coordinator
-GrowlManager gm = GrowlManager(DHTPIN, DHTTYPE);
+GrowlManager gm = GrowlManager(DHTPIN);
 
 SSD1306  display(0x3c, 4, 15);
 //WIFI
@@ -75,7 +68,8 @@ Arduino setup function (automatically called at startup)
 /**************************************************************************/
 void setup(void)
 {
-	
+	Serial.begin(57600);
+
 	pinMode(MAIN_LIGHTS, OUTPUT);
 	gm.setMainLightsPin(MAIN_LIGHTS);
 
@@ -91,16 +85,18 @@ void setup(void)
 	gm.setLightSensorPin(LIGHT_SENSOR);
 	pinMode(LIGHT_SENSOR, INPUT);
 
+	gm.setDhtPin(LIGHT_SENSOR);
+	pinMode(DHTPIN, INPUT);
+
 	gm.initChamber();
 
+	//OLED
 	pinMode(OLED, OUTPUT);
 	digitalWrite(OLED, LOW);    // set GPIO16 low to reset OLED
 	delay(50);
 	digitalWrite(OLED, HIGH); // while OLED is running, must set GPIO16 in high
-
 	display.init();
 	display.setLogBuffer(5, 30);
-	Serial.begin(57600);
 	 
 
 	WiFi.begin(ssid, password);
@@ -134,7 +130,7 @@ void loop(void)
 	}*/
 
 	//delay(100);
-	delay(500);
+
 	//Serial.print(gm.reportStatus().c_str());
 	drawText();
 

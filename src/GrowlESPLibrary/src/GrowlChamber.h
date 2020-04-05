@@ -4,10 +4,10 @@
 #else
 #include "WProgram.h"
 #endif
-#include <DHT_U.h>
-#include <DHT.h>
+#include <DHTesp.h>
 
 #include <GrowlSensor.h>
+
 
 
 
@@ -15,11 +15,13 @@ class GrowlChamber
 {
 
 public:
-	GrowlChamber(uint8_t dht_pin, uint8_t dht_type) : _dht(dht_pin, dht_type) {
-		_dht = DHT(dht_pin, dht_type);
+	GrowlChamber() {
+		//_dht_pin = dht_pin;
+		
+		/*_dht = DHT(dht_pin, dht_type);
 		Serial.print("GrowlChamber constructor, DHT pin=");
 		Serial.println(dht_pin);
-		_dht.begin();
+		_dht.begin();*/
 	};
 	void init();
 	void loop();
@@ -36,14 +38,16 @@ public:
 	void setOuttakeFanPin(int HWPIN);
 	void setHeaterPin(int HWPIN);
 	void setLightSensorPin(int HWPIN);
-	int getMainLightsPin( );
-	int getIntakeFanPin( );
-	int getOuttakeFanPin( );
-	int getHeaterPin( );
-	int getLightSensorPin( );
+	void setDhtPin(int HWPIN);
+	int getMainLightsPin();
+	int getIntakeFanPin();
+	int getOuttakeFanPin();
+	int getHeaterPin();
+	int getLightSensorPin();
 	float getTemperature();
 	float getHumidity();
 	int getLumen();//NOT real Lumen!
+	
 private:
 	int _mainLightPIN;
 	int _intakePIN;
@@ -55,6 +59,10 @@ private:
 	bool _isIntakeFanON;
 	bool _isOuttakeON;
 	bool _isHeaterON;
-	DHT _dht;
+
+	bool initTemp();
+	int _dht_pin;
+	//int _dht_type;
+
 };
 

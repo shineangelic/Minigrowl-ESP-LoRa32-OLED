@@ -199,3 +199,9 @@ void GrowlManager::setLightSensorPin(int HWPIN)
 	_chamber.setLightSensorPin(HWPIN);
 }
 
+void GrowlManager::setDhtPin(int HWPIN)
+{
+	_dht_pin = HWPIN;
+	_chamber.setDhtPin(HWPIN);
+}
+
