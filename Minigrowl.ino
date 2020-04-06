@@ -38,8 +38,8 @@ Connect 15 to RX of SI UART
 // GPIO18 -- SX1278's CS
 // GPIO14 -- SX1278's RESET
 // GPIO26 -- SX1278's IRQ(Interrupt Request)
-#define MAIN_LIGHTS 25//onboardLED
-#define HEATER		12
+#define MAIN_LIGHTS 12//onboardLED
+#define HEATER		25
 #define OUTTAKE_FAN	13
 #define INTAKE_FAN	2
 #define OLED		16
@@ -71,24 +71,25 @@ void setup(void)
 	Serial.begin(57600);
 
 	pinMode(MAIN_LIGHTS, OUTPUT);
-	gm.setMainLightsPin(MAIN_LIGHTS);
+	gm.initMainLights(MAIN_LIGHTS);
 
 	pinMode(INTAKE_FAN, OUTPUT);
-	gm.setIntakeFanPin(INTAKE_FAN);
+	gm.initIntakeFan(INTAKE_FAN);
 
 	pinMode(OUTTAKE_FAN, OUTPUT);
-	gm.setOuttakeFanPin(OUTTAKE_FAN);
+	gm.initOuttakeFanPin(OUTTAKE_FAN);
 
 	pinMode(HEATER, OUTPUT);
 	gm.setHeaterPin(HEATER);
 
-	gm.setLightSensorPin(LIGHT_SENSOR);
+	gm.initLightSensor(LIGHT_SENSOR);
 	pinMode(LIGHT_SENSOR, INPUT);
 
 	gm.setDhtPin(DHTPIN);
 	pinMode(DHTPIN, INPUT);
 
 	gm.initChamber();
+	delay(1000);//wait DHT
 
 	//OLED
 	pinMode(OLED, OUTPUT);
@@ -117,10 +118,11 @@ void setup(void)
 void loop(void)
 {
 	gm.loop();
-
+	delay(500);
 	/*OLED Report*/
 	
-
+	Serial.print("Free Heap: ");
+	Serial.println(ESP.getFreeHeap());
 	// Display the results (total active energy in Wh)
 	/*if (event.current) {
 		//print DB debug

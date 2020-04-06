@@ -26,11 +26,11 @@ public:
 	std::string reportStatus();
 	std::tm	getGrowlManagerTime();
 	GrowlChamber getChamber();
-	void setMainLightsPin(int HWPIN);
-	void setIntakeFanPin(int HWPIN);
-	void setOuttakeFanPin(int HWPIN);
+	void initMainLights(int HWPIN);
+	void initIntakeFan(int HWPIN);
+	void initOuttakeFanPin(int HWPIN);
 	void setHeaterPin(int HWPIN);
-	void setLightSensorPin(int HWPIN);
+	void initLightSensor(int HWPIN);
 	void setDhtPin(int HWPIN);
 private:
 	void sendCurrentSensors();
@@ -44,8 +44,8 @@ private:
 	HumiditySensor  _humiditySensor;
 	TemperatureSensor _tempSensor;
 	MainLights _mainLights;
+	Hvac	_hvac;
 	Fan		_inTakeFan;
 	Fan		_outTakeFan;
-	int _dht_pin;
 };
 

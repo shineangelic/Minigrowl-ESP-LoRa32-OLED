@@ -7,7 +7,7 @@
 
 #include "GrowlManager.h"
 //used to define "same GPIO" sensors (tipo DHT)
-#define MAX_SENSORS 8
+#define MAXPINS 32
 
 
 const char* host = "192.168.0.54:8080";
@@ -21,9 +21,7 @@ void GrowlManager::initChamber()
 	_pc = 0;
 	_chamber.init();
 	//_chamber.setLightSensorPin(LIGHT_SENSOR);
-	_lightSensor.setPid(_chamber.getLightSensorPin());
-	_tempSensor.setPid(_dht_pin);//received in constructor
-	_humiditySensor.setPid(_dht_pin + MAX_SENSORS);//received in constructor
+
 	//_humiditySensor.setPid(_chamber.getHimiditySensorPin());
 	//_tempSensor.setPid(_chamber.getTempSensorPin());
 	//sendCurrentSensors();
@@ -31,22 +29,30 @@ void GrowlManager::initChamber()
 	_sensorsPtr.push_back(&_tempSensor);
 	_sensorsPtr.push_back(&_humiditySensor);
 
+
 	_actuatorsPtr.push_back(&_inTakeFan);
 	_actuatorsPtr.push_back(&_outTakeFan);
 	_actuatorsPtr.push_back(&_mainLights);
+	_actuatorsPtr.push_back(&_hvac);
 }
 
 void GrowlManager::loop()
 {
-	_chamber.loop();
+
 	_pc++;
 	_chamber.switchHeater(true);
-	_chamber.switchIntakeFan(true);
-	_chamber.switchOuttakeFan(true);
+
 	_chamber.switchMainLights(true);
 
-	delay(200);
-
+	//TEST SPINTA
+	if (_pc % 2) {
+		_chamber.switchIntakeFan(true);
+		_chamber.switchOuttakeFan(true);
+	}
+	else {
+		//_chamber.switchIntakeFan(false);
+		//_chamber.switchOuttakeFan(false);
+	}
 	//LIFECYCLE
 
 	//hw readings
@@ -63,15 +69,22 @@ void GrowlManager::loop()
 	_mainLights.setReading(_chamber.getMainLightsStatus());
 	_outTakeFan.setReading(_chamber.getOuttakeFanStatus());
 	_inTakeFan.setReading(_chamber.getIntakeFanStatus());
+	_hvac.setReading(_chamber.getHeatingStatus());
 
 	//retrieveServerCommands();
 
 	//applyServerCommands();
 
-	if (_pc % 2 == 0)
-		sendCurrentSensors();
-	else
-		sendActuators();
+	_chamber.loop();//yield() alla fine
+
+
+	sendCurrentSensors();
+	delay(500);
+	sendActuators();
+	 
+
+
+
 }
 
 void GrowlManager::sendCurrentSensors()
@@ -83,10 +96,10 @@ void GrowlManager::sendCurrentSensors()
 		Serial.println("connection failed");
 		return;
 	}*/
-
+	GrowlSensor* toSend = _sensorsPtr.at(_pc % _sensorsPtr.size());
 	// We now create a URI for the request
 	String url = "/api/esp/v1/sensors/id/";
-	url += _lightSensor.getPid();
+	url += toSend->getPid();
 
 	Serial.print("Send sensor: ");
 	Serial.println(url);
@@ -95,7 +108,7 @@ void GrowlManager::sendCurrentSensors()
 	/*client.print(String("PUT ") + url + " HTTP/1.1\r\n" +
 		"Host: " + host + "\r\n" +
 		"Connection: close\r\n\r\n");*/
-	GrowlSensor* toSend = _sensorsPtr.at(_pc % _sensorsPtr.size());
+
 
 	Serial.print("HTTP REQ:");
 	Serial.println(toSend->toJSON().c_str());
@@ -107,6 +120,7 @@ void GrowlManager::sendCurrentSensors()
 	Serial.print("HTTP RESPONSE:");
 	Serial.println(httpResponseCode);
 	//Serial.println(_lightSensor.toJSON().c_str());
+
 }
 
 void GrowlManager::sendActuators()
@@ -128,8 +142,13 @@ void GrowlManager::sendActuators()
 	Serial.println(url);
 
 	Serial.print("HTTP REQ:");
+	try {
+		Serial.println(toSend->toJSON().c_str());
+	}
+	catch (int e) {
+		Serial.print("ERRORE GATTICO An exception occurred. Exception Nr. " + e);
+	}
 
-	Serial.println(toSend->toJSON().c_str());
 
 	http.begin(String("http://") + host + url); //Specify destination for HTTP request
 	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
@@ -144,14 +163,14 @@ std::string GrowlManager::reportStatus()
 {
 	std::ostringstream ss;
 	ss << "LIGHT: ";
-	ss << (this->getChamber().getMainLightsStatus() ? "ON" : "OFF");
+	ss << (_mainLights.getReading() != 0 ? "ON" : "OFF");
 	ss << " HEATER: ";
-	ss << (this->getChamber().getHeatingStatus() ? "ON" : "OFF");
+	ss << (_hvac.getReading() != 0 ? "ON" : "OFF");
 	ss << "\n";
 	ss << "FAN: IN: ";
-	ss << (this->getChamber().getIntakeFanStatus() ? "ON" : "OFF");
+	ss << (_inTakeFan.getReading() != 0 ? "ON" : "OFF");
 	ss << " - OUT: ";
-	ss << (this->getChamber().getOuttakeFanStatus() ? "ON" : "OFF");
+	ss << (_outTakeFan.getReading() != 0 ? "ON" : "OFF");
 	ss << "\n";
 	ss << "Hum: ";
 	ss << this->getChamber().getHumidity() << "%";
@@ -160,8 +179,8 @@ std::string GrowlManager::reportStatus()
 	ss << "\n";
 	ss << "Lumen: ";
 	ss << this->getChamber().getLumen() << "lux";
-	std::string s(ss.str());
-	return s;
+	//std::string s(ss.str());
+	return ss.str();
 	//return std::to_string(_chamber.getHumidity()) << std::to_string(_chamber.getTemperature());
 }
 
@@ -175,27 +194,31 @@ GrowlChamber GrowlManager::getChamber()
 	return _chamber;
 }
 
-void GrowlManager::setMainLightsPin(int HWPIN)
+void GrowlManager::initMainLights(int HWPIN)
 {
 	_chamber.setMainLightsPin(HWPIN);
+	_mainLights.setPid(HWPIN);
 }
 
-void GrowlManager::setIntakeFanPin(int HWPIN)
+void GrowlManager::initIntakeFan(int HWPIN)
 {
 	_chamber.setIntakeFanPin(HWPIN);
+	_inTakeFan.setPid(HWPIN);
 }
 
-void GrowlManager::setOuttakeFanPin(int HWPIN)
+void GrowlManager::initOuttakeFanPin(int HWPIN)
 {
 	_chamber.setOuttakeFanPin(HWPIN);
+	_outTakeFan.setPid(HWPIN);
 }
 
 void GrowlManager::setHeaterPin(int HWPIN)
 {
 	_chamber.setHeaterPin(HWPIN);
+	_hvac.setPid(HWPIN);
 }
 
-void GrowlManager::setLightSensorPin(int HWPIN)
+void GrowlManager::initLightSensor(int HWPIN)
 {
 	_lightSensor.setPid(HWPIN);
 	_chamber.setLightSensorPin(HWPIN);
@@ -203,7 +226,9 @@ void GrowlManager::setLightSensorPin(int HWPIN)
 
 void GrowlManager::setDhtPin(int HWPIN)
 {
-	_dht_pin = HWPIN;
+	_tempSensor.setPid(HWPIN);
 	_chamber.setDhtPin(HWPIN);
+	_humiditySensor.setPid(HWPIN + MAXPINS);//received in constructor
+	//_humiditySensor.setPid(_dht_pin + MAX_SENSORS);//received in constructor
 }
 

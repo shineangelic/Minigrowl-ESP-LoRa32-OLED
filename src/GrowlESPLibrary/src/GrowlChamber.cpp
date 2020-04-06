@@ -29,7 +29,13 @@ bool tasksEnabled = false;
 void GrowlChamber::init()
 {
 	Serial.println("GrowlChamber init");
-	initTemp();
+	bool initOK = initTemp();
+	if (!initOK)
+	{
+		Serial.println("GrowlChamber init ERROR, please reboot");
+		return;
+	}
+
 	// Signal end of setup() to tasks
 	tasksEnabled = true;
 }
@@ -40,18 +46,20 @@ void GrowlChamber::loop()
 	if (!tasksEnabled) {
 		// Wait 2 seconds to let system settle down
 		delay(2000);
+		init();
 		// Enable task that will read values from the DHT sensor
 		tasksEnabled = true;
 		if (tempTaskHandle != NULL) {
 			vTaskResume(tempTaskHandle);
 		}
 	}
-	yield();
+	
 	digitalWrite(_mainLightPIN, _isMainLightsON);
 	digitalWrite(_intakePIN, _isIntakeFanON);
 	digitalWrite(_outtakePIN, _isOuttakeON);
 	digitalWrite(_heaterPIN, _isHeaterON);
 
+	yield();
 }
 
 /**
@@ -66,7 +74,7 @@ bool GrowlChamber::initTemp() {
 	byte resultValue = 0;
 	// Initialize temperature sensor
 	_dht.setup(_dht_pin, DHTesp::DHT22);
-	Serial.print("DHT initiated on PIN ");
+	Serial.print("DHT init on PIN ");
 	Serial.println(_dht_pin);
 
 	// Start task to get temperature

@@ -20,7 +20,7 @@ std::string GrowlActuator::toJSON()
 	// Inside the brackets, 200 is the RAM allocated to this document.
 	// Don't forget to change this value to match your requirement.
 	// Use arduinojson.org/v6/assistant to compute the capacity.
-	StaticJsonDocument<400> doc;
+	DynamicJsonDocument doc(2000);
 
 	// StaticJsonObject allocates memory on the stack, it can be
 	// replaced by DynamicJsonDocument which allocates in the heap.
@@ -43,13 +43,6 @@ std::string GrowlActuator::toJSON()
 		array.add((*iter)->toJSON());
 	}
 
-	
-
-	// Add an array.
-	//
-	/*JsonArray data = doc.createNestedArray("data");
-	data.add(48.756080);
-	data.add(2.302038);*/
 
 	std::string s("");
 	int p = serializeJson(doc, s);

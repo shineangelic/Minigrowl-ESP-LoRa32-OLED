@@ -12,7 +12,6 @@ GrowlCommand::GrowlCommand(std::string name, int value)
 }
 
 
-
 JsonObject  GrowlCommand::toJSON()
 {
 	// Allocate the JSON document
