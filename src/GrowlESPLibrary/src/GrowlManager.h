@@ -4,6 +4,10 @@
 #include <string>
 #include <vector>
 #include <time.h>
+#include<iostream> 
+#include<array> // for array, at() 
+#include<tuple> // for get() 
+
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "arduino.h"
 #else
@@ -15,12 +19,12 @@
 #include <ctime>
 #include <GrowlChamber.h>
 
+using namespace std;
+
 class GrowlManager
 {
 public:
-	GrowlManager() : _chamber() {
-
-	};
+	GrowlManager() : _chamber() {};
 	void initChamber();
 	void loop();
 	void retrieveTime();
@@ -33,9 +37,11 @@ public:
 	void setHeaterPin(int HWPIN);
 	void initLightSensor(int HWPIN);
 	void setDhtPin(int HWPIN);
+	void setBME280Pin(int SCLPIN, int SDAPIN);
 private:
 	void sendCurrentSensors();
 	void sendActuators();
+	void chamberLogic();
 	short _pc;//program counter
 	GrowlChamber	_chamber;
 	std::tm			_time;

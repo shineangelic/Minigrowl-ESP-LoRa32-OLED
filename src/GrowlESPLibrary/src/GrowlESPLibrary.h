@@ -1,7 +1,7 @@
 /*
  Name:		GrowlESPLibrary.h
  Created:	30/03/2020 00:22:28
- Author:	Ale
+ Author:	shine@angelic.it
  Editor:	http://www.visualmicro.com
 */
 

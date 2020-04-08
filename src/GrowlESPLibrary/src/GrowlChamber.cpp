@@ -6,15 +6,18 @@ https://github.com/beegee-tokyo/DHTesp/blob/master/examples/DHT_ESP32/DHT_ESP32.
 
 uses beegee-tokyo DHT lib
 */
+#define TIMER_INTERVAL_SECONDS 20
+#define BME280_INTERVAL_MSEC 100000
 
+/** Task handle to retrieve sensors value */
 void tempTask(void* pvParameters);
 void triggerGetTemp();
 void retrieveTemperatureTask();
-
-
-/** Task handle for the light value read task */
 TaskHandle_t tempTaskHandle = NULL;
+
 DHTesp _dht;
+TwoWire I2Cone = TwoWire(1);
+Adafruit_BME280 bme;
 
 float _curTemp;
 float _curHum;
@@ -25,11 +28,24 @@ Ticker tempTicker;
 ComfortState cf;
 /** Flag if task should run */
 bool tasksEnabled = false;
- 
+
+
+
+
+/* DEVONO ESSERE STATE GIA CHIAMATE LE SETPIN */
 void GrowlChamber::init()
 {
 	Serial.println("GrowlChamber init");
+	//DHT sensor
 	bool initOK = initTemp();
+	//BME280 sensor
+	I2Cone.begin(_SDAPIN, _SCLPIN, BME280_INTERVAL_MSEC);
+	bool status1 = bme.begin(0x76, &I2Cone);
+	if (!status1) {
+		Serial.println("Could not find a valid BME280_1 sensor, check wiring!");
+		initOK = false;
+	}
+
 	if (!initOK)
 	{
 		Serial.println("GrowlChamber init ERROR, please reboot");
@@ -53,15 +69,18 @@ void GrowlChamber::loop()
 			vTaskResume(tempTaskHandle);
 		}
 	}
-	
+
+	//operate relays
 	digitalWrite(_mainLightPIN, _isMainLightsON);
 	digitalWrite(_intakePIN, _isIntakeFanON);
 	digitalWrite(_outtakePIN, _isOuttakeON);
 	digitalWrite(_heaterPIN, _isHeaterON);
 
+
+
 	yield();
 }
-
+ 
 /**
  * initTemp
  * Setup DHT library
@@ -93,7 +112,7 @@ bool GrowlChamber::initTemp() {
 	}
 	else {
 		// Start update of environment data every 20 seconds
-		tempTicker.attach(20, triggerGetTemp);
+		tempTicker.attach(TIMER_INTERVAL_SECONDS, triggerGetTemp);
 	}
 	return true;
 }
@@ -142,50 +161,69 @@ void retrieveTemperatureTask() {
 	// Check if any reads failed and exit early (to try again).
 	if (_dht.getStatus() != 0) {
 		Serial.println("DHT22 error status: " + String(_dht.getStatusString()));
-		return;
+		//return;
 	}
+	else {
 
-	float heatIndex = _dht.computeHeatIndex(newValues.temperature, newValues.humidity);
-	float dewPoint = _dht.computeDewPoint(newValues.temperature, newValues.humidity);
-	float cr = _dht.getComfortRatio(cf, newValues.temperature, newValues.humidity);
+		float heatIndex = _dht.computeHeatIndex(newValues.temperature, newValues.humidity);
+		float dewPoint = _dht.computeDewPoint(newValues.temperature, newValues.humidity);
+		float cr = _dht.getComfortRatio(cf, newValues.temperature, newValues.humidity);
 
-	String comfortStatus;
-	switch (cf) {
-	case Comfort_OK:
-		comfortStatus = "Comfort_OK";
-		break;
-	case Comfort_TooHot:
-		comfortStatus = "Comfort_TooHot";
-		break;
-	case Comfort_TooCold:
-		comfortStatus = "Comfort_TooCold";
-		break;
-	case Comfort_TooDry:
-		comfortStatus = "Comfort_TooDry";
-		break;
-	case Comfort_TooHumid:
-		comfortStatus = "Comfort_TooHumid";
-		break;
-	case Comfort_HotAndHumid:
-		comfortStatus = "Comfort_HotAndHumid";
-		break;
-	case Comfort_HotAndDry:
-		comfortStatus = "Comfort_HotAndDry";
-		break;
-	case Comfort_ColdAndHumid:
-		comfortStatus = "Comfort_ColdAndHumid";
-		break;
-	case Comfort_ColdAndDry:
-		comfortStatus = "Comfort_ColdAndDry";
-		break;
-	default:
-		comfortStatus = "Unknown:";
-		break;
-	};
-	_curTemp = newValues.temperature;
-	_curHum = newValues.humidity;
-	Serial.println("DHT22 update:" + String(newValues.temperature) + " H:" + String(newValues.humidity) + " I:" + String(heatIndex) + " D:" + String(dewPoint) + " " + comfortStatus);
- 
+		String comfortStatus;
+		switch (cf) {
+		case Comfort_OK:
+			comfortStatus = "Comfort_OK";
+			break;
+		case Comfort_TooHot:
+			comfortStatus = "Comfort_TooHot";
+			break;
+		case Comfort_TooCold:
+			comfortStatus = "Comfort_TooCold";
+			break;
+		case Comfort_TooDry:
+			comfortStatus = "Comfort_TooDry";
+			break;
+		case Comfort_TooHumid:
+			comfortStatus = "Comfort_TooHumid";
+			break;
+		case Comfort_HotAndHumid:
+			comfortStatus = "Comfort_HotAndHumid";
+			break;
+		case Comfort_HotAndDry:
+			comfortStatus = "Comfort_HotAndDry";
+			break;
+		case Comfort_ColdAndHumid:
+			comfortStatus = "Comfort_ColdAndHumid";
+			break;
+		case Comfort_ColdAndDry:
+			comfortStatus = "Comfort_ColdAndDry";
+			break;
+		default:
+			comfortStatus = "Unknown:";
+			break;
+		};
+		_curTemp = newValues.temperature;
+		_curHum = newValues.humidity;
+		Serial.println("DHT22 update:" + String(newValues.temperature) + " H:" + String(newValues.humidity) + " I:" + String(heatIndex) + " D:" + String(dewPoint) + " " + comfortStatus);
+	}
+	float temperature = bme.readTemperature();
+	float humidity = bme.readHumidity();
+	//float pressure = bme.readPressure() / 100.0F;
+	Serial.print("BME280: temperature: ");
+	Serial.print(temperature);
+	Serial.print(" BME280 humidity: ");
+	Serial.println(humidity);
+
+
+	//failsafe per DHT22 che fa schifo
+	if (_curTemp != 0) {
+		_curTemp = (_curTemp + temperature) / 2;
+		_curHum = (_curHum + humidity) / 2;
+	}
+	else {
+		_curTemp = temperature;
+		_curHum = humidity;
+	}
 }
 
 
@@ -266,6 +304,12 @@ void GrowlChamber::setLightSensorPin(int HWPIN)
 void GrowlChamber::setDhtPin(int HWPIN)
 {
 	_dht_pin = HWPIN;
+}
+
+void GrowlChamber::setBME280Pin(int SCLPIN, int SDAPIN)
+{
+	_SCLPIN = SCLPIN;
+	_SDAPIN = SDAPIN;
 }
 
 int GrowlChamber::getMainLightsPin()

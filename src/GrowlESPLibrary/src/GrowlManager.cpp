@@ -8,11 +8,12 @@
 #include <ostream>
 
 #include "GrowlManager.h"
-//used to define "same GPIO" sensors (tipo DHT)
-#define MAXPINS 32
+ 
 
+using namespace std;
 
 const char* host = "192.168.0.54:8080";
+const float hourSchedule[] = { 1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 
 //LightSensor		_lightSensor(LIGHT_SENSOR);
 //HumiditySensor  _humidity(DHTPIN);
@@ -40,21 +41,7 @@ void GrowlManager::initChamber()
 
 void GrowlManager::loop()
 {
-
 	_pc++;
-	_chamber.switchHeater(true);
-	_chamber.switchMainLights(true);
-
-	//TEST SPINTA
-	if (_pc % 2) {
-		_chamber.switchIntakeFan(true);
-		_chamber.switchOuttakeFan(true);
-	}
-	else {
-		//_chamber.switchIntakeFan(false);
-		//_chamber.switchOuttakeFan(false);
-	}
-	//LIFECYCLE
 
 	//hw readings
 	float luxR = _chamber.getLumen();
@@ -72,16 +59,48 @@ void GrowlManager::loop()
 	_inTakeFan.setReading(_chamber.getIntakeFanStatus());
 	_hvac.setReading(_chamber.getHeatingStatus());
 
+	//schedules and conditions
+	chamberLogic();
+
 	//retrieveServerCommands();
 
 	//applyServerCommands();
 
-	_chamber.loop();//yield() alla fine
+	_chamber.loop();
 
 	//sendCurrentSensors();
 	delay(500);
 	//sendActuators();
 	retrieveTime();
+}
+
+void GrowlManager::chamberLogic()
+{
+	_chamber.switchHeater(true);
+	_chamber.switchMainLights(true);
+
+	//TEST SPINTA
+	if (_pc % 2) {
+		_chamber.switchIntakeFan(true);
+		_chamber.switchOuttakeFan(true);
+	}
+	else {
+		//_chamber.switchIntakeFan(false);
+		//_chamber.switchOuttakeFan(false);
+	}
+	//LIFECYCLE
+	struct tm now;
+	getLocalTime(&now, 0);
+
+	//mainlights schedule
+	_chamber.switchMainLights(hourSchedule[now.tm_hour]);
+
+	//heat out take
+	if (_chamber.getTemperature() > 29)
+		_chamber.switchOuttakeFan(true);
+	else
+		_chamber.switchOuttakeFan(false);
+
 }
 
 void GrowlManager::retrieveTime()
@@ -105,32 +124,30 @@ void GrowlManager::retrieveTime()
 	Serial.println(httpResponseCode);
 	if (httpResponseCode > 0) { //Check for the returning code
 
+		unsetenv("TZ");
 		String payload = http.getString();
 		payload.replace("\"", "");
 		Serial.print("Payload: ");
 		Serial.println(payload);
 		const char* format = "%Y-%m-%dT%H:%M:%S";
 		strptime(payload.c_str(), format,& _time);
-		Serial.print("Chamber time: ");
-		char chDate[10] = "";
-		char chTime[8] = "";
+
+		//debug only
+		Serial.print("Chamber time(UTC): ");
+		char chDate[11] = "";
+		char chTime[9] = "";
 		strftime(chDate, 11, "%m/%d/%Y", &_time);
-		strftime(chTime, 8, "%H:%M:%S", &_time);
+		strftime(chTime, 9, "%H:%M:%S", &_time);
 		Serial.print(chDate);
+		Serial.print(" ");
 		Serial.println(chTime);
 
 		int epoch_time = mktime(&_time);
 		timeval epoch = { epoch_time, 0 };
 		const timeval* tv = &epoch;
-		timezone utc = { 0,0 };
-		const timezone* tz = &utc;
-		settimeofday(tv, tz);
-
-		//VERIFICA
-		struct tm now;
-		getLocalTime(&now, 0);
-		Serial.println(&now, " %B %d %Y %H:%M:%S (%A)");
-		delay(1000);
+		settimeofday(tv, NULL);
+		
+		
 
 
 	} else {
@@ -138,6 +155,17 @@ void GrowlManager::retrieveTime()
 	}
 
 	http.end();
+
+	int rcode = setenv("TZ", "EST+5", 1);
+	tzset();
+	Serial.print("SetEnv reply");
+	Serial.println(rcode);
+	//VERIFICA
+	struct tm now;
+	getLocalTime(&now, 0);
+	Serial.println(&now, " %B %d %Y %H:%M:%S (%A)");
+	delay(1000);
+
 }
 
 void GrowlManager::sendCurrentSensors()
@@ -213,6 +241,8 @@ void GrowlManager::sendActuators()
 }
 
 
+
+
 std::string GrowlManager::reportStatus()
 {
 	std::ostringstream ss;
@@ -227,9 +257,9 @@ std::string GrowlManager::reportStatus()
 	ss << (_outTakeFan.getReading() != 0 ? "ON" : "OFF");
 	ss << "\n";
 	ss << "Hum: ";
-	ss << this->getChamber().getHumidity() << "%";
+	ss << (std::ceil(this->getChamber().getHumidity() * 10) / 10) << "%";
 	ss << " Temp: ";
-	ss << this->getChamber().getTemperature() << "°C";
+	ss << (std::ceil(this->getChamber().getTemperature() * 10) /10) << "°C";
 	ss << "\n";
 	ss << "Lumen: ";
 	ss << this->getChamber().getLumen() << "lux";
@@ -282,7 +312,11 @@ void GrowlManager::setDhtPin(int HWPIN)
 {
 	_tempSensor.setPid(HWPIN);
 	_chamber.setDhtPin(HWPIN);
-	_humiditySensor.setPid(HWPIN + MAXPINS);//received in constructor
-	//_humiditySensor.setPid(_dht_pin + MAX_SENSORS);//received in constructor
+}
+
+void GrowlManager::setBME280Pin(int SCLPIN, int SDAPIN)
+{
+	_chamber.setBME280Pin( SCLPIN,  SDAPIN);
+	_humiditySensor.setPid(SCLPIN);//uses BME PIN as id for hum
 }
 

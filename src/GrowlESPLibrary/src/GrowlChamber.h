@@ -5,6 +5,9 @@
 #include "WProgram.h"
 #endif
 #include <DHTesp.h>
+//Libraries for BME280
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
 
 #include <GrowlSensor.h>
 
@@ -39,6 +42,7 @@ public:
 	void setHeaterPin(int HWPIN);
 	void setLightSensorPin(int HWPIN);
 	void setDhtPin(int HWPIN);
+	void setBME280Pin(int SCLPIN, int SDAPIN);
 	int getMainLightsPin();
 	int getIntakeFanPin();
 	int getOuttakeFanPin();
@@ -54,7 +58,7 @@ private:
 	int _outtakePIN;
 	int _heaterPIN;
 	int _lightSensorPIN;
-
+	
 	bool _isMainLightsON;
 	bool _isIntakeFanON;
 	bool _isOuttakeON;
@@ -63,6 +67,8 @@ private:
 	bool initTemp();
 	int _dht_pin;
 	//int _dht_type;
+	int _SCLPIN;
+	int _SDAPIN;
 
 };
 

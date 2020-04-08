@@ -18,6 +18,8 @@ Author:     CRONER\Ale
 #include <WiFi.h>
 #include <GrowlManager.h> 
 
+
+
 /* Sketch to demonstrate basic SI odel functionality
 
 Connections
@@ -38,12 +40,14 @@ Connect 15 to RX of SI UART
 // GPIO18 -- SX1278's CS
 // GPIO14 -- SX1278's RESET
 // GPIO26 -- SX1278's IRQ(Interrupt Request)
-#define MAIN_LIGHTS 12//onboardLED
-#define HEATER		25
+#define MAIN_LIGHTS 12
+#define HEATER		25//onboardLED
 #define OUTTAKE_FAN	13
 #define INTAKE_FAN	2
 #define OLED		16
 
+#define SCL 17
+#define SDA 21
 
 #define LIGHT_SENSOR 33
 #define DHTPIN 22 
@@ -56,10 +60,8 @@ SSD1306  display(0x3c, 4, 15);
 const char* ssid = "Cisco66778";
 const char* password = "cimadaconegliano";
 
-
 //const char* host = "192.168.0.54";
 short pc;
- 
 
 /**************************************************************************/
 /*
@@ -69,7 +71,6 @@ Arduino setup function (automatically called at startup)
 void setup(void)
 {
 	Serial.begin(57600);
-
 
 	pinMode(MAIN_LIGHTS, OUTPUT);
 	gm.initMainLights(MAIN_LIGHTS);
@@ -88,6 +89,8 @@ void setup(void)
 
 	gm.setDhtPin(DHTPIN);
 	pinMode(DHTPIN, INPUT);
+
+	gm.setBME280Pin(SCL, SDA);
 
 	gm.initChamber();
 	delay(1000);//wait DHT
@@ -112,7 +115,7 @@ void setup(void)
 	Serial.println("WiFi connected");
 	Serial.println("IP address: ");
 	Serial.println(WiFi.localIP());
-	pc = 0;//program counter
+	pc = 1;//program counter
 }
 
 
@@ -142,6 +145,8 @@ void loop(void)
 
 	// Use WiFiClient class to create TCP connections
 	//doTestGet();
+
+
 
 }
 /*
