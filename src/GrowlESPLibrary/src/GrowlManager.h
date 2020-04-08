@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
+#include <time.h>
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "arduino.h"
 #else
@@ -23,6 +23,7 @@ public:
 	};
 	void initChamber();
 	void loop();
+	void retrieveTime();
 	std::string reportStatus();
 	std::tm	getGrowlManagerTime();
 	GrowlChamber getChamber();

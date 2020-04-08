@@ -1,8 +1,10 @@
 ﻿
 #include <WiFi.h>
+#include <time.h>
 #include <HTTPClient.h>
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <ostream>
 
 #include "GrowlManager.h"
@@ -41,7 +43,6 @@ void GrowlManager::loop()
 
 	_pc++;
 	_chamber.switchHeater(true);
-
 	_chamber.switchMainLights(true);
 
 	//TEST SPINTA
@@ -77,14 +78,66 @@ void GrowlManager::loop()
 
 	_chamber.loop();//yield() alla fine
 
-
-	sendCurrentSensors();
+	//sendCurrentSensors();
 	delay(500);
-	sendActuators();
-	 
+	//sendActuators();
+	retrieveTime();
+}
+
+void GrowlManager::retrieveTime()
+{
+	WiFiClient client;
+	HTTPClient http;
+	
+	// We now create a URI for the request
+	String url = "/api/esp/v1/getTime/";
 
 
+	Serial.print("Retrieve time: ");
+	Serial.println(url);
 
+	Serial.print("HTTP REQ:");
+	http.begin(String("http://") + host + url); //Specify destination for HTTP request
+	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
+	int httpResponseCode = http.GET(); //Send the actual POST request
+
+	Serial.print("HTTP RESPONSE:");
+	Serial.println(httpResponseCode);
+	if (httpResponseCode > 0) { //Check for the returning code
+
+		String payload = http.getString();
+		payload.replace("\"", "");
+		Serial.print("Payload: ");
+		Serial.println(payload);
+		const char* format = "%Y-%m-%dT%H:%M:%S";
+		strptime(payload.c_str(), format,& _time);
+		Serial.print("Chamber time: ");
+		char chDate[10] = "";
+		char chTime[8] = "";
+		strftime(chDate, 11, "%m/%d/%Y", &_time);
+		strftime(chTime, 8, "%H:%M:%S", &_time);
+		Serial.print(chDate);
+		Serial.println(chTime);
+
+		int epoch_time = mktime(&_time);
+		timeval epoch = { epoch_time, 0 };
+		const timeval* tv = &epoch;
+		timezone utc = { 0,0 };
+		const timezone* tz = &utc;
+		settimeofday(tv, tz);
+
+		//VERIFICA
+		struct tm now;
+		getLocalTime(&now, 0);
+		Serial.println(&now, " %B %d %Y %H:%M:%S (%A)");
+		delay(1000);
+
+
+	} else {
+		Serial.println("Error on HTTP time request");
+	}
+
+	http.end();
 }
 
 void GrowlManager::sendCurrentSensors()
@@ -120,7 +173,7 @@ void GrowlManager::sendCurrentSensors()
 	Serial.print("HTTP RESPONSE:");
 	Serial.println(httpResponseCode);
 	//Serial.println(_lightSensor.toJSON().c_str());
-
+	http.end();
 }
 
 void GrowlManager::sendActuators()
@@ -156,6 +209,7 @@ void GrowlManager::sendActuators()
 
 	Serial.print("HTTP RESPONSE:");
 	Serial.println(httpResponseCode);
+	http.end();
 }
 
 

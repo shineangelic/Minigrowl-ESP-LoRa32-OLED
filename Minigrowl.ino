@@ -70,6 +70,7 @@ void setup(void)
 {
 	Serial.begin(57600);
 
+
 	pinMode(MAIN_LIGHTS, OUTPUT);
 	gm.initMainLights(MAIN_LIGHTS);
 
