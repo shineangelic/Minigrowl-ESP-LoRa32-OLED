@@ -15,43 +15,41 @@ protected:
 
 class MainLights : public GrowlActuator {
 public:
-	MainLights(int gpid) : GrowlActuator(gpid) {
-		_name = "Main Lights";
-		_supportedCommands.push_back(new GrowlCommand("Turn ON", 1));
-		_supportedCommands.push_back(new GrowlCommand("Turn OFF", 0));
-	};
+ 
 	MainLights() : GrowlActuator() {
 		_name = "Main Lights";
-		_supportedCommands.push_back(new GrowlCommand("Turn ON", 1));
-		_supportedCommands.push_back(new GrowlCommand("Turn OFF", 0));
+		_supportedCommands.push_back(new GrowlCommand("Switch lights ON", 1));
+		_supportedCommands.push_back(new GrowlCommand("Switch lights OFF", 0));
 	};
 };
 
-class Fan : public GrowlActuator {
+class OutTakeFan : public GrowlActuator {
 public:
-	Fan(int gpid) : GrowlActuator(gpid) {
+
+	OutTakeFan() : GrowlActuator() {
 		_name = "Fan";
-		_supportedCommands.push_back(new GrowlCommand("Turn ON Fan", 1));
-		_supportedCommands.push_back(new GrowlCommand("Turn OFF Fan", 0));
+		_supportedCommands.push_back(new GrowlCommand("Turn ON outtake Fan", 1));
+		_supportedCommands.push_back(new GrowlCommand("Turn OFF outtake Fan", 0));
 	};
-	Fan() : GrowlActuator() {
-		_name = "Fan";
-		_supportedCommands.push_back(new GrowlCommand("Turn ON Fan", 1));
-		_supportedCommands.push_back(new GrowlCommand("Turn OFF Fan", 0));
+};
+
+class IntakeFan : public GrowlActuator {
+public:
+
+	IntakeFan() : GrowlActuator() {
+		_name = "IntakeFan";
+		_supportedCommands.push_back(new GrowlCommand("Turn ON intake Fan", 1));
+		_supportedCommands.push_back(new GrowlCommand("Turn intake Fan OFF", 0));
 	};
 };
 
 class Hvac : public GrowlActuator {
 public:
-	Hvac(int gpid) : GrowlActuator(gpid) {
-		_name = "Heat&Conditioning";
-		_supportedCommands.push_back(new GrowlCommand("Turn ON Fan", 1));
-		_supportedCommands.push_back(new GrowlCommand("Turn OFF Fan", 0));
-	};
+ 
 	Hvac() : GrowlActuator() {
 		_name = "Heat&Conditioning";
 		_supportedCommands.push_back(new GrowlCommand("Set Temperature", 1));
-		_supportedCommands.push_back(new GrowlCommand("Turn OFF", 0));
+		_supportedCommands.push_back(new GrowlCommand("Turn OFF Hvac", 0));
 	};
 };
 

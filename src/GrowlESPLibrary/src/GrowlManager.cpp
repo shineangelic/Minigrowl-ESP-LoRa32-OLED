@@ -1,9 +1,10 @@
 ﻿
 #include <WiFi.h>
-#include <time.h>
 #include <HTTPClient.h>
 #include <iostream>
-#include <string>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
 #include <sstream>
 #include <ostream>
 
@@ -14,7 +15,7 @@ using namespace std;
 
 const char* host = "192.168.0.54:8080";
 const float hourSchedule[] = { 1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
-
+ 
 //LightSensor		_lightSensor(LIGHT_SENSOR);
 //HumiditySensor  _humidity(DHTPIN);
 
@@ -68,10 +69,14 @@ void GrowlManager::loop()
 
 	_chamber.loop();
 
-	//sendCurrentSensors();
-	delay(500);
-	//sendActuators();
-	retrieveTime();
+	//delay(2000);
+	//sendSensors();
+	delay(2000);
+	sendActuators();
+	delay(2000);
+
+	//non va, per la storia UTC. Alla fine uso NTP
+	//retrieveTime();
 }
 
 void GrowlManager::chamberLogic()
@@ -111,7 +116,6 @@ void GrowlManager::retrieveTime()
 	// We now create a URI for the request
 	String url = "/api/esp/v1/getTime/";
 
-
 	Serial.print("Retrieve time: ");
 	Serial.println(url);
 
@@ -123,52 +127,47 @@ void GrowlManager::retrieveTime()
 	Serial.print("HTTP RESPONSE:");
 	Serial.println(httpResponseCode);
 	if (httpResponseCode > 0) { //Check for the returning code
-
-		unsetenv("TZ");
+		std::tm			chtime;
+		 
 		String payload = http.getString();
 		payload.replace("\"", "");
 		Serial.print("Payload: ");
 		Serial.println(payload);
 		const char* format = "%Y-%m-%dT%H:%M:%S";
-		strptime(payload.c_str(), format,& _time);
+		strptime(payload.c_str(), format,&chtime);
 
 		//debug only
 		Serial.print("Chamber time(UTC): ");
 		char chDate[11] = "";
 		char chTime[9] = "";
-		strftime(chDate, 11, "%m/%d/%Y", &_time);
-		strftime(chTime, 9, "%H:%M:%S", &_time);
+		strftime(chDate, 11, "%m/%d/%Y", &chtime);
+		strftime(chTime, 9, "%H:%M:%S", &chtime);
 		Serial.print(chDate);
 		Serial.print(" ");
 		Serial.println(chTime);
 
-		int epoch_time = mktime(&_time);
+		int epoch_time = mktime(&chtime);
 		timeval epoch = { epoch_time, 0 };
 		const timeval* tv = &epoch;
-		settimeofday(tv, NULL);
-		
-		
-
-
+		settimeofday(tv, NULL);//vaffanculo
+		 
 	} else {
 		Serial.println("Error on HTTP time request");
 	}
 
 	http.end();
 
-	int rcode = setenv("TZ", "EST+5", 1);
-	tzset();
-	Serial.print("SetEnv reply");
-	Serial.println(rcode);
+
 	//VERIFICA
 	struct tm now;
 	getLocalTime(&now, 0);
 	Serial.println(&now, " %B %d %Y %H:%M:%S (%A)");
 	delay(1000);
-
 }
 
-void GrowlManager::sendCurrentSensors()
+
+
+void GrowlManager::sendSensors()
 {
 	WiFiClient client;
 	HTTPClient http;
@@ -184,13 +183,7 @@ void GrowlManager::sendCurrentSensors()
 
 	Serial.print("Send sensor: ");
 	Serial.println(url);
-
-	// This will send the request to the server
-	/*client.print(String("PUT ") + url + " HTTP/1.1\r\n" +
-		"Host: " + host + "\r\n" +
-		"Connection: close\r\n\r\n");*/
-
-
+ 
 	Serial.print("HTTP REQ:");
 	Serial.println(toSend->toJSON().c_str());
 
@@ -208,14 +201,8 @@ void GrowlManager::sendActuators()
 {
 	WiFiClient client;
 	HTTPClient http;
-	GrowlActuator* toSend = _actuatorsPtr.at(_pc % _sensorsPtr.size());
-	/*const int httpPort = 8080;
-	if (!client.connect(host, httpPort)) {
-		Serial.println("connection failed");
-		return;
-	}*/
-
-	// We now create a URI for the request
+	GrowlActuator* toSend = _actuatorsPtr.at(_pc % _actuatorsPtr.size());
+	 
 	String url = "/api/esp/v1/actuators/id/";
 	url += toSend->getPid();
 
@@ -225,19 +212,20 @@ void GrowlManager::sendActuators()
 	Serial.print("HTTP REQ:");
 	try {
 		Serial.println(toSend->toJSON().c_str());
+		http.begin(String("http://") + host + url); //Specify destination for HTTP request
+		http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
+		int httpResponseCode = http.PUT(toSend->toJSON().c_str()); //Send the actual POST request
+
+		Serial.print("HTTP RESPONSE:");
+		Serial.println(httpResponseCode);
+		http.end();
 	}
 	catch (int e) {
 		Serial.print("ERRORE GATTICO An exception occurred. Exception Nr. " + e);
 	}
 
 
-	http.begin(String("http://") + host + url); //Specify destination for HTTP request
-	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
-	int httpResponseCode = http.PUT(toSend->toJSON().c_str()); //Send the actual POST request
-
-	Serial.print("HTTP RESPONSE:");
-	Serial.println(httpResponseCode);
-	http.end();
+	
 }
 
 
@@ -245,6 +233,13 @@ void GrowlManager::sendActuators()
 
 std::string GrowlManager::reportStatus()
 {
+	time_t tnow;
+	time(&tnow);
+	//int ret = localtime_s(&when, &tnow);
+	struct tm* when = localtime(&tnow); 
+	char chTime[9] = "";
+	strftime(chTime, 9, "%H:%M:%S", when);
+
 	std::ostringstream ss;
 	ss << "LIGHT: ";
 	ss << (_mainLights.getReading() != 0 ? "ON" : "OFF");
@@ -263,6 +258,8 @@ std::string GrowlManager::reportStatus()
 	ss << "\n";
 	ss << "Lumen: ";
 	ss << this->getChamber().getLumen() << "lux";
+	ss << "\n";
+	ss << chTime;
 	//std::string s(ss.str());
 	return ss.str();
 	//return std::to_string(_chamber.getHumidity()) << std::to_string(_chamber.getTemperature());

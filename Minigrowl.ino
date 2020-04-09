@@ -16,6 +16,7 @@ Author:     CRONER\Ale
 #include <SoftwareSerial.h>
 #include "SSD1306.h"
 #include <WiFi.h>
+#include "time.h"
 #include <GrowlManager.h> 
 
 
@@ -60,6 +61,10 @@ SSD1306  display(0x3c, 4, 15);
 const char* ssid = "Cisco66778";
 const char* password = "cimadaconegliano";
 
+const char* ntpServer = "europe.pool.ntp.org";
+const long  gmtOffset_sec = 3600;
+const int   daylightOffset_sec = 3600;
+
 //const char* host = "192.168.0.54";
 short pc;
 
@@ -71,6 +76,7 @@ Arduino setup function (automatically called at startup)
 void setup(void)
 {
 	Serial.begin(57600);
+ 
 
 	pinMode(MAIN_LIGHTS, OUTPUT);
 	gm.initMainLights(MAIN_LIGHTS);
@@ -115,7 +121,26 @@ void setup(void)
 	Serial.println("WiFi connected");
 	Serial.println("IP address: ");
 	Serial.println(WiFi.localIP());
+
+	// Init and get the time
+	configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+	printLocalTime();
+
+
 	pc = 1;//program counter
+}
+
+void printLocalTime() {
+	struct tm timeinfo;
+	if (!getLocalTime(&timeinfo)) {
+		Serial.println("Failed to obtain time");
+		return;
+	}
+	time_t tnow;
+	time(&tnow);
+	//int ret = localtime_s(&when, &tnow);
+	struct tm* when = localtime(&tnow);
+	Serial.println(when, " %B %d %Y %H:%M:%S (%A)");
 }
 
 

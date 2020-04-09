@@ -204,14 +204,14 @@ void retrieveTemperatureTask() {
 		};
 		_curTemp = newValues.temperature;
 		_curHum = newValues.humidity;
-		Serial.println("DHT22 update:" + String(newValues.temperature) + " H:" + String(newValues.humidity) + " I:" + String(heatIndex) + " D:" + String(dewPoint) + " " + comfortStatus);
+		Serial.println("DHT22:  T:" + String(newValues.temperature) + " H:" + String(newValues.humidity) + " I:" + String(heatIndex) + " D:" + String(dewPoint) + " " + comfortStatus);
 	}
 	float temperature = bme.readTemperature();
 	float humidity = bme.readHumidity();
 	//float pressure = bme.readPressure() / 100.0F;
-	Serial.print("BME280: temperature: ");
+	Serial.print("BME280: T:");
 	Serial.print(temperature);
-	Serial.print(" BME280 humidity: ");
+	Serial.print(" H:");
 	Serial.println(humidity);
 
 

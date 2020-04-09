@@ -39,12 +39,12 @@ public:
 	void setDhtPin(int HWPIN);
 	void setBME280Pin(int SCLPIN, int SDAPIN);
 private:
-	void sendCurrentSensors();
+	void sendSensors();
 	void sendActuators();
 	void chamberLogic();
 	short _pc;//program counter
 	GrowlChamber	_chamber;
-	std::tm			_time;
+	//std::tm			_time;
 	std::vector<GrowlSensor*> _sensorsPtr;
 	std::vector<GrowlActuator*> _actuatorsPtr;
 	LightSensor		_lightSensor;
@@ -52,7 +52,7 @@ private:
 	TemperatureSensor _tempSensor;
 	MainLights _mainLights;
 	Hvac	_hvac;
-	Fan		_inTakeFan;
-	Fan		_outTakeFan;
+	IntakeFan		_inTakeFan;
+	OutTakeFan		_outTakeFan;
 };
 
