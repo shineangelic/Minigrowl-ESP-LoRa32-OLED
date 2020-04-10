@@ -50,6 +50,7 @@ public:
 	int getLightSensorPin();
 	float getTemperature();
 	float getHumidity();
+	float getPressure();
 	int getLumen();//NOT real Lumen!
 	
 private:

@@ -77,7 +77,7 @@ void setup(void)
 {
 	Serial.begin(57600);
  
-
+	//CONFIGURE YOUR DEVICES HERE
 	pinMode(MAIN_LIGHTS, OUTPUT);
 	gm.initMainLights(MAIN_LIGHTS);
 
@@ -96,8 +96,12 @@ void setup(void)
 	gm.setDhtPin(DHTPIN);
 	pinMode(DHTPIN, INPUT);
 
+	gm.initHumSensorId(SCL);
+	gm.initTempSensorId(DHTPIN);
+	gm.initBarometerId(SDA);
 	gm.setBME280Pin(SCL, SDA);
 
+	//call chamber delegate AFTER having set PINs
 	gm.initChamber();
 	delay(1000);//wait DHT
 

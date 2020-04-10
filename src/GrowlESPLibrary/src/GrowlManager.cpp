@@ -9,13 +9,13 @@
 #include <ostream>
 
 #include "GrowlManager.h"
- 
+
 
 using namespace std;
 
 const char* host = "192.168.0.54:8080";
 const float hourSchedule[] = { 1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
- 
+
 //LightSensor		_lightSensor(LIGHT_SENSOR);
 //HumiditySensor  _humidity(DHTPIN);
 
@@ -32,6 +32,7 @@ void GrowlManager::initChamber()
 	_sensorsPtr.push_back(&_lightSensor);
 	_sensorsPtr.push_back(&_tempSensor);
 	_sensorsPtr.push_back(&_humiditySensor);
+	_sensorsPtr.push_back(&_barometer);
 
 
 	_actuatorsPtr.push_back(&_inTakeFan);
@@ -59,6 +60,7 @@ void GrowlManager::loop()
 	_outTakeFan.setReading(_chamber.getOuttakeFanStatus());
 	_inTakeFan.setReading(_chamber.getIntakeFanStatus());
 	_hvac.setReading(_chamber.getHeatingStatus());
+	_barometer.setReading(_chamber.getPressure());
 
 	//schedules and conditions
 	chamberLogic();
@@ -70,9 +72,12 @@ void GrowlManager::loop()
 	_chamber.loop();
 
 	//delay(2000);
-	//sendSensors();
+
 	delay(2000);
-	sendActuators();
+	if (_pc % 3 == 0)
+		sendSensors();
+	else
+		sendActuators();
 	delay(2000);
 
 	//non va, per la storia UTC. Alla fine uso NTP
@@ -112,7 +117,7 @@ void GrowlManager::retrieveTime()
 {
 	WiFiClient client;
 	HTTPClient http;
-	
+
 	// We now create a URI for the request
 	String url = "/api/esp/v1/getTime/";
 
@@ -128,13 +133,13 @@ void GrowlManager::retrieveTime()
 	Serial.println(httpResponseCode);
 	if (httpResponseCode > 0) { //Check for the returning code
 		std::tm			chtime;
-		 
+
 		String payload = http.getString();
 		payload.replace("\"", "");
 		Serial.print("Payload: ");
 		Serial.println(payload);
 		const char* format = "%Y-%m-%dT%H:%M:%S";
-		strptime(payload.c_str(), format,&chtime);
+		strptime(payload.c_str(), format, &chtime);
 
 		//debug only
 		Serial.print("Chamber time(UTC): ");
@@ -150,8 +155,9 @@ void GrowlManager::retrieveTime()
 		timeval epoch = { epoch_time, 0 };
 		const timeval* tv = &epoch;
 		settimeofday(tv, NULL);//vaffanculo
-		 
-	} else {
+
+	}
+	else {
 		Serial.println("Error on HTTP time request");
 	}
 
@@ -183,7 +189,7 @@ void GrowlManager::sendSensors()
 
 	Serial.print("Send sensor: ");
 	Serial.println(url);
- 
+
 	Serial.print("HTTP REQ:");
 	Serial.println(toSend->toJSON().c_str());
 
@@ -202,7 +208,7 @@ void GrowlManager::sendActuators()
 	WiFiClient client;
 	HTTPClient http;
 	GrowlActuator* toSend = _actuatorsPtr.at(_pc % _actuatorsPtr.size());
-	 
+
 	String url = "/api/esp/v1/actuators/id/";
 	url += toSend->getPid();
 
@@ -225,7 +231,7 @@ void GrowlManager::sendActuators()
 	}
 
 
-	
+
 }
 
 
@@ -236,7 +242,7 @@ std::string GrowlManager::reportStatus()
 	time_t tnow;
 	time(&tnow);
 	//int ret = localtime_s(&when, &tnow);
-	struct tm* when = localtime(&tnow); 
+	struct tm* when = localtime(&tnow);
 	char chTime[9] = "";
 	strftime(chTime, 9, "%H:%M:%S", when);
 
@@ -254,7 +260,7 @@ std::string GrowlManager::reportStatus()
 	ss << "Hum: ";
 	ss << (std::ceil(this->getChamber().getHumidity() * 10) / 10) << "%";
 	ss << " Temp: ";
-	ss << (std::ceil(this->getChamber().getTemperature() * 10) /10) << "°C";
+	ss << (std::ceil(this->getChamber().getTemperature() * 10) / 10) << "°C";
 	ss << "\n";
 	ss << "Lumen: ";
 	ss << this->getChamber().getLumen() << "lux";
@@ -293,6 +299,22 @@ void GrowlManager::initOuttakeFanPin(int HWPIN)
 	_outTakeFan.setPid(HWPIN);
 }
 
+void GrowlManager::initBarometerId(int HWPIN)
+{
+	//il pin e` gia` settato con apposita chiamata per HW
+	_barometer.setPid(HWPIN);
+}
+
+void GrowlManager::initTempSensorId(int HWPIN)
+{
+	_tempSensor.setPid(HWPIN);
+}
+
+void GrowlManager::initHumSensorId(int SCLPIN)
+{
+	_humiditySensor.setPid(SCLPIN);//uses BME PIN as id for hum
+}
+
 void GrowlManager::setHeaterPin(int HWPIN)
 {
 	_chamber.setHeaterPin(HWPIN);
@@ -307,13 +329,11 @@ void GrowlManager::initLightSensor(int HWPIN)
 
 void GrowlManager::setDhtPin(int HWPIN)
 {
-	_tempSensor.setPid(HWPIN);
 	_chamber.setDhtPin(HWPIN);
 }
 
 void GrowlManager::setBME280Pin(int SCLPIN, int SDAPIN)
 {
-	_chamber.setBME280Pin( SCLPIN,  SDAPIN);
-	_humiditySensor.setPid(SCLPIN);//uses BME PIN as id for hum
+	_chamber.setBME280Pin(SCLPIN, SDAPIN);
 }
 

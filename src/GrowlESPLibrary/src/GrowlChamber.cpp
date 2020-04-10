@@ -21,6 +21,7 @@ Adafruit_BME280 bme;
 
 float _curTemp;
 float _curHum;
+float _pressure;
 
 /** Ticker for temperature reading */
 Ticker tempTicker;
@@ -208,7 +209,7 @@ void retrieveTemperatureTask() {
 	}
 	float temperature = bme.readTemperature();
 	float humidity = bme.readHumidity();
-	//float pressure = bme.readPressure() / 100.0F;
+	float pressure = bme.readPressure() / 100.0F;
 	Serial.print("BME280: T:");
 	Serial.print(temperature);
 	Serial.print(" H:");
@@ -224,6 +225,7 @@ void retrieveTemperatureTask() {
 		_curTemp = temperature;
 		_curHum = humidity;
 	}
+	_pressure = pressure;
 }
 
 
@@ -346,6 +348,11 @@ float GrowlChamber::getHumidity()
 {
 	//object for static? Im no good at C++ :(
 	return _curHum;
+}
+
+float GrowlChamber::getPressure()
+{
+	return _pressure;
 }
 
 

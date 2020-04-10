@@ -2,7 +2,7 @@
 #include <ctime>
 #include <iostream>
 #include "GrowlDevice.h"
-class GrowlSensor: public GrowlDevice
+class GrowlSensor : public GrowlDevice
 {
 
 public:
@@ -38,10 +38,15 @@ public:
 
 class HumiditySensor : public GrowlSensor {
 public:
-	HumiditySensor(int gpid) : GrowlSensor(gpid) {
-		_sensortype = 'H';
-	};
 	HumiditySensor() : GrowlSensor() {
 		_sensortype = 'H';
 	};
 };
+class BaromenterSensor : public GrowlSensor {
+public:
+	BaromenterSensor() : GrowlSensor() {
+		_sensortype = 'B';
+	};
+};
+
+

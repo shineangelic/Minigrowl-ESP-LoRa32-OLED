@@ -34,6 +34,9 @@ public:
 	void initMainLights(int HWPIN);
 	void initIntakeFan(int HWPIN);
 	void initOuttakeFanPin(int HWPIN);
+	void initBarometerId(int HWPIN);
+	void initTempSensorId(int HWPIN);
+	void initHumSensorId(int HWPIN);
 	void setHeaterPin(int HWPIN);
 	void initLightSensor(int HWPIN);
 	void setDhtPin(int HWPIN);
@@ -51,6 +54,7 @@ private:
 	HumiditySensor  _humiditySensor;
 	TemperatureSensor _tempSensor;
 	MainLights _mainLights;
+	BaromenterSensor _barometer;
 	Hvac	_hvac;
 	IntakeFan		_inTakeFan;
 	OutTakeFan		_outTakeFan;
