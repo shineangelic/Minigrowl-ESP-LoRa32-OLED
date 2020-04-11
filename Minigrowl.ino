@@ -95,10 +95,7 @@ void setup(void)
 
 	gm.setDhtPin(DHTPIN);
 	pinMode(DHTPIN, INPUT);
-
-	gm.initHumSensorId(SCL);
-	gm.initTempSensorId(DHTPIN);
-	gm.initBarometerId(SDA);
+	 
 	gm.setBME280Pin(SCL, SDA);
 
 	//call chamber delegate AFTER having set PINs

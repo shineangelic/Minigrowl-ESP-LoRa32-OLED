@@ -70,12 +70,17 @@ void GrowlChamber::loop()
 			vTaskResume(tempTaskHandle);
 		}
 	}
+	//refresh sensors from static
+	_barometer.setReading(_pressure);
+	_lightSensor.setReading(getLumen());
+	_tempSensor.setReading(_curTemp);
+	_humiditySensor.setReading(_curHum);
 
 	//operate relays
-	digitalWrite(_mainLightPIN, _isMainLightsON);
-	digitalWrite(_intakePIN, _isIntakeFanON);
-	digitalWrite(_outtakePIN, _isOuttakeON);
-	digitalWrite(_heaterPIN, _isHeaterON);
+	digitalWrite(_mainLights.getPid(), _mainLights.getReading());
+	digitalWrite(_inTakeFan.getPid(), _inTakeFan.getReading());
+	digitalWrite(_outTakeFan.getPid(), _outTakeFan.getReading());
+	digitalWrite(_hvac.getPid(), _hvac.getReading());
 
 
 
@@ -218,6 +223,7 @@ void retrieveTemperatureTask() {
 
 	//failsafe per DHT22 che fa schifo
 	if (_curTemp != 0) {
+
 		_curTemp = (_curTemp + temperature) / 2;
 		_curHum = (_curHum + humidity) / 2;
 	}
@@ -226,122 +232,117 @@ void retrieveTemperatureTask() {
 		_curHum = humidity;
 	}
 	_pressure = pressure;
+	
 }
 
 
 
 bool GrowlChamber::getMainLightsStatus()
 {
-	return _isMainLightsON;
+	return _mainLights.getReading() > 0;
 }
 
 bool GrowlChamber::getIntakeFanStatus()
 {
-	return _isIntakeFanON;
+	return _inTakeFan.getReading() > 0;
 }
-
-bool GrowlChamber::getOuttakeFanStatus()
-{
-	return _isOuttakeON;
-}
+ 
 
 bool GrowlChamber::getHeatingStatus()
 {
-	return _isHeaterON;
+	return _hvac.getReading() > 0;
 }
 
 bool GrowlChamber::switchMainLights(bool on)
 {
-	_isMainLightsON = on;
-	digitalWrite(_mainLightPIN, _isMainLightsON);
-	Serial.print("Switch LIGHT:");
-	Serial.println(on);
-	return _isMainLightsON;
+	_mainLights.setReading(on?1:0);
+	digitalWrite(_mainLights.getPid(), _mainLights.getReading());
+	return _mainLights.getReading();
 }
 
 bool GrowlChamber::switchIntakeFan(bool on)
 {
-	_isIntakeFanON = on;
-	Serial.print("Switch FAN:");
-	Serial.println(on);
-	digitalWrite(_intakePIN, _isIntakeFanON);
-	return _isIntakeFanON;
+	_inTakeFan.setReading(on ? 1 : 0);
+	digitalWrite(_inTakeFan.getPid(), _inTakeFan.getReading());
+	return _inTakeFan.getReading();
 }
 
 bool GrowlChamber::switchOuttakeFan(bool on)
 {
-	_isOuttakeON = on;
-	digitalWrite(_outtakePIN, _isOuttakeON);
-	return _isOuttakeON;
+	_outTakeFan.setReading(on? 1 : 0);
+	digitalWrite(_outTakeFan.getPid(), on);
+	return on;
 }
 
 bool GrowlChamber::switchHeater(bool on)
 {
-	_isHeaterON = on;
-	digitalWrite(_heaterPIN, _isHeaterON);
-	return _isHeaterON;
+	_hvac.setReading(on ? 1 : 0);
+	digitalWrite(_hvac.getPid(), _hvac.getReading());
+	return _hvac.getReading();
 }
 
 void GrowlChamber::setMainLightsPin(int HWPIN)
 {
-	_mainLightPIN = HWPIN;
+	_mainLights.setPid(HWPIN); 
 }
 
 void GrowlChamber::setIntakeFanPin(int HWPIN)
 {
-	_intakePIN = HWPIN;
+	_inTakeFan.setPid(HWPIN);
 }
 
 void GrowlChamber::setOuttakeFanPin(int HWPIN)
 {
-	_outtakePIN = HWPIN;
+	_outTakeFan.setPid(HWPIN);
 }
 
 void GrowlChamber::setHeaterPin(int HWPIN)
 {
-	_heaterPIN = HWPIN;
+	_hvac.setPid(HWPIN);
 }
 
 void GrowlChamber::setLightSensorPin(int HWPIN)
 {
-	_lightSensorPIN = HWPIN;
+	//_lightSensorPIN = HWPIN;
+	_lightSensor.setPid(HWPIN);
 }
 
 void GrowlChamber::setDhtPin(int HWPIN)
 {
 	_dht_pin = HWPIN;
+	_tempSensor.setPid(HWPIN);
 }
 
 void GrowlChamber::setBME280Pin(int SCLPIN, int SDAPIN)
 {
 	_SCLPIN = SCLPIN;
 	_SDAPIN = SDAPIN;
+	_barometer.setPid(SDA);
+	_humiditySensor.setPid(SCLPIN);
+	
 }
 
-int GrowlChamber::getMainLightsPin()
+MainLights* GrowlChamber::getMainLights()
 {
-	return _mainLightPIN;
+	return &_mainLights;
 }
 
-int GrowlChamber::getIntakeFanPin()
+IntakeFan* GrowlChamber::getIntakeFan()
 {
-	return _intakePIN;
+	return &_inTakeFan;
 }
 
-int GrowlChamber::getOuttakeFanPin()
+OutTakeFan* GrowlChamber::getOuttakeFan()
 {
-	return _outtakePIN;
+	return &_outTakeFan;
 }
 
-int GrowlChamber::getHeaterPin()
+Hvac* GrowlChamber::getHeater()
 {
-	return _heaterPIN;
+	return &_hvac;
 }
 
-int GrowlChamber::getLightSensorPin()
-{
-	return _lightSensorPIN;
-}
+ 
 
 float GrowlChamber::getTemperature()
 {
@@ -362,13 +363,33 @@ float GrowlChamber::getPressure()
 
 int GrowlChamber::getLumen()
 {
-	return analogRead(_lightSensorPIN);
+	return analogRead(_lightSensor.getPid());
 	//return (float)(1023 - sensorValue) * 10 / sensorValue;
 	/*Serial.println("the analog read data is ");
 	Serial.println(sensorValue);
 	Serial.println("the sensor resistance is ");
 	Serial.println(Rsensor, DEC);
 	return 0.0f;*/
+}
+
+BaromenterSensor* GrowlChamber::getBarometerSensor()
+{
+	return &_barometer;
+}
+
+TemperatureSensor* GrowlChamber::getTemperatureSensor()
+{
+	return &_tempSensor;
+}
+
+HumiditySensor* GrowlChamber::getHumiditySensor()
+{
+	return &_humiditySensor;
+}
+
+LightSensor* GrowlChamber::getLightSensor()
+{
+	return &_lightSensor;
 }
 
 

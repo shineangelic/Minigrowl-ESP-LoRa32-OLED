@@ -29,40 +29,31 @@ public:
 	GrowlManager() : _chamber() {};
 	void initChamber();
 	void loop();
-	void retrieveTime();
+	//void retrieveTime();
 	std::string reportStatus();
 	std::tm	getGrowlManagerTime();
 	GrowlChamber getChamber();
 	void initMainLights(int HWPIN);
 	void initIntakeFan(int HWPIN);
 	void initOuttakeFanPin(int HWPIN);
-	void initBarometerId(int HWPIN);
-	void initTempSensorId(int HWPIN);
-	void initHumSensorId(int HWPIN);
+
 	void setHeaterPin(int HWPIN);
 	void initLightSensor(int HWPIN);
 	void setDhtPin(int HWPIN);
 	void setBME280Pin(int SCLPIN, int SDAPIN);
 private:
 	void applyServerCommands();
-	void removeExecutedCommand(GrowlCommand* executed);
+	bool removeExecutedCommand(GrowlCommand* executed);
 	void retrieveServerCommands();
 	void sendSensors();
 	void sendActuators();
 	void chamberLogic();
 	short _pc;//program counter
 	GrowlChamber	_chamber;
-	//std::tm			_time;
 	std::vector<GrowlSensor*>	_sensorsPtr;
 	std::vector<GrowlActuator*> _actuatorsPtr;
-	LightSensor				_lightSensor;
-	HumiditySensor			_humiditySensor;
-	TemperatureSensor		 _tempSensor;
-	MainLights				_mainLights;
-	BaromenterSensor		_barometer;
-	Hvac					_hvac;
-	IntakeFan				_inTakeFan;
-	OutTakeFan					_outTakeFan;
+
+	//commands to be executed
 	std::deque<GrowlCommand> _commandsQueue;
 };
 

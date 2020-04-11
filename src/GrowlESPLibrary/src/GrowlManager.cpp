@@ -34,16 +34,16 @@ void GrowlManager::initChamber()
 	//_humiditySensor.setPid(_chamber.getHimiditySensorPin());
 	//_tempSensor.setPid(_chamber.getTempSensorPin());
 	//sendCurrentSensors();
-	_sensorsPtr.push_back(&_lightSensor);
-	_sensorsPtr.push_back(&_tempSensor);
-	_sensorsPtr.push_back(&_humiditySensor);
-	_sensorsPtr.push_back(&_barometer);
+	_sensorsPtr.push_back(_chamber.getLightSensor());
+	_sensorsPtr.push_back(_chamber.getTemperatureSensor());
+	_sensorsPtr.push_back(_chamber.getHumiditySensor());
+	_sensorsPtr.push_back(_chamber.getBarometerSensor());
 
 
-	_actuatorsPtr.push_back(&_inTakeFan);
-	_actuatorsPtr.push_back(&_outTakeFan);
-	_actuatorsPtr.push_back(&_mainLights);
-	_actuatorsPtr.push_back(&_hvac);
+	_actuatorsPtr.push_back(_chamber.getIntakeFan());
+	_actuatorsPtr.push_back(_chamber.getOuttakeFan());
+	_actuatorsPtr.push_back(_chamber.getMainLights());
+	_actuatorsPtr.push_back(_chamber.getHeater());
 }
 
 void GrowlManager::loop()
@@ -55,16 +55,16 @@ void GrowlManager::loop()
 	float hum = _chamber.getHumidity();
 	float temp = _chamber.getTemperature();
 
-	_lightSensor.setReading(luxR);
-	_humiditySensor.setReading(hum);
-	_tempSensor.setReading(temp);
-	_barometer.setReading(_chamber.getPressure());
+	//_lightSensor.setReading(luxR);
+	//_humiditySensor.setReading(hum);
+	//_tempSensor.setReading(temp);
+	//_barometer.setReading(_chamber.getPressure());
 
 
-	_chamber.switchMainLights(_mainLights.getReading());
-	_chamber.switchOuttakeFan(_outTakeFan.getReading());
-	_chamber.switchIntakeFan(_inTakeFan.getReading());
-	_chamber.switchHeater(_hvac.getReading());
+	//_chamber.switchMainLights(_mainLights.getReading());
+	//_chamber.switchOuttakeFan(_outTakeFan.getReading());
+	//_chamber.switchIntakeFan(_inTakeFan.getReading());
+	//_chamber.switchHeater(_hvac.getReading());
 	//_outTakeFan.setReading(_chamber.getOuttakeFanStatus());
 	//_inTakeFan.setReading(_chamber.getIntakeFanStatus());
 	//_hvac.setReading(_chamber.getHeatingStatus());
@@ -111,14 +111,14 @@ void GrowlManager::chamberLogic()
 
 	//mainlights schedule
 	_chamber.switchMainLights(hourSchedule[now.tm_hour]);
-	_mainLights.setReading(hourSchedule[now.tm_hour]);
+	//_mainLights.setReading(hourSchedule[now.tm_hour]);
 	//heat out take
 	if (_chamber.getTemperature() > 29) {
-		_outTakeFan.setReading(1);
+		//_outTakeFan.setReading(1);
 		_chamber.switchOuttakeFan(true);
 	}
 	else {
-		_inTakeFan.setReading(0);
+		//_inTakeFan.setReading(0);
 		_chamber.switchOuttakeFan(false);
 	}
 
@@ -137,7 +137,8 @@ void GrowlManager::applyServerCommands()
 				value->executeCommand(exec);
 				Serial.println("COMMAND EXEC, val=");
 				Serial.println(exec.getValueParameter());
-				removeExecutedCommand(&exec);
+				bool removed = removeExecutedCommand(&exec);
+				
 				break;
 			}
 
@@ -147,7 +148,7 @@ void GrowlManager::applyServerCommands()
 	Serial.println(_commandsQueue.size());
 }
 
-void GrowlManager::removeExecutedCommand(GrowlCommand* executed) {
+bool GrowlManager::removeExecutedCommand(GrowlCommand* executed) {
 
 	WiFiClient client;
 	HTTPClient http;
@@ -155,20 +156,22 @@ void GrowlManager::removeExecutedCommand(GrowlCommand* executed) {
 	// We now create a URI for the request
 	String url = "/api/esp/v1/commands/id/";
 	url += executed->getQueueId();
-	Serial.print("DELETE command: ");
-	Serial.println(url);
+	String completeUrl = String("http://") + host + ":" + httpPort + url;
+	Serial.print("removeExecutedCommand() url: ");
+	Serial.println(completeUrl);
 
-	http.begin(String("http://") + host + ":" + httpPort + url); //Specify destination for HTTP request
+	http.begin(completeUrl);
 	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
 	std::string s("");
 	//s = executed->toJSONstr();
 	//Serial.print(s.c_str());
 	int httpResponseCode = http.POST(s.c_str()); //Send the actual POST request
 
-	Serial.print("HTTP RESPONSE:");
+	Serial.print("removeExecutedCommand() RESPONSE:");
 	Serial.println(httpResponseCode);
 	//Serial.println(_lightSensor.toJSON().c_str());
 	http.end();
+	return httpResponseCode == 200;
 }
 
 void GrowlManager::retrieveServerCommands()
@@ -242,27 +245,28 @@ void GrowlManager::sendSensors()
 {
 	WiFiClient client;
 	HTTPClient http;
-	/*const int httpPort = 8080;
+	const int httpPort = 8080;
 	if (!client.connect(host, httpPort)) {
-		Serial.println("connection failed");
+		Serial.println("sendSensors() connection failed");
 		return;
-	}*/
+	}
 	GrowlSensor* toSend = _sensorsPtr.at(_pc % _sensorsPtr.size());
 	// We now create a URI for the request
 	String url = "/api/esp/v1/sensors/id/";
 	url += toSend->getPid();
+	String completeUrl = String("http://") + host + ":" + httpPort + url;
 
-	Serial.print("Send sensor: ");
-	Serial.println(url);
+	Serial.print("sendSensors(): ");
+	Serial.println(completeUrl);
 
 	Serial.print("HTTP REQ:");
 	Serial.println(toSend->toJSON().c_str());
 
-	http.begin(String("http://") + host + ":" + httpPort + url); //Specify destination for HTTP request
+	http.begin(completeUrl); //Specify destination for HTTP request
 	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
 	int httpResponseCode = http.PUT(toSend->toJSON().c_str()); //Send the actual POST request
 
-	Serial.print("HTTP RESPONSE:");
+	Serial.print("sendSensors() HTTP RESPONSE:");
 	Serial.println(httpResponseCode);
 	//Serial.println(_lightSensor.toJSON().c_str());
 	http.end();
@@ -310,14 +314,14 @@ std::string GrowlManager::reportStatus()
 
 	std::ostringstream ss;
 	ss << "LIGHT: ";
-	ss << (_mainLights.getReading() != 0 ? "ON" : "OFF");
+	ss << (_chamber.getMainLights()->getReading() != 0 ? "ON" : "OFF");
 	ss << " HEATER: ";
-	ss << (_hvac.getReading() != 0 ? "ON" : "OFF");
+	ss << (_chamber.getHeater()->getReading() != 0 ? "ON" : "OFF");
 	ss << "\n";
 	ss << "FAN: IN: ";
-	ss << (_inTakeFan.getReading() != 0 ? "ON" : "OFF");
+	ss << (_chamber.getIntakeFan()->getReading() != 0 ? "ON" : "OFF");
 	ss << " - OUT: ";
-	ss << (_outTakeFan.getReading() != 0 ? "ON" : "OFF");
+	ss << (_chamber.getOuttakeFan()->getReading() != 0 ? "ON" : "OFF");
 	ss << "\n";
 	ss << "Hum: ";
 	ss << (std::ceil(this->getChamber().getHumidity() * 10) / 10) << "%";
@@ -345,51 +349,33 @@ GrowlChamber GrowlManager::getChamber()
 void GrowlManager::initMainLights(int HWPIN)
 {
 	_chamber.setMainLightsPin(HWPIN);
-	_mainLights.setPid(HWPIN);
 }
 
 void GrowlManager::initIntakeFan(int HWPIN)
 {
 	_chamber.setIntakeFanPin(HWPIN);
-	_inTakeFan.setPid(HWPIN);
 }
 
 void GrowlManager::initOuttakeFanPin(int HWPIN)
 {
 	_chamber.setOuttakeFanPin(HWPIN);
-	_outTakeFan.setPid(HWPIN);
-}
-
-void GrowlManager::initBarometerId(int HWPIN)
-{
-	//il pin e` gia` settato con apposita chiamata per HW
-	_barometer.setPid(HWPIN);
-}
-
-void GrowlManager::initTempSensorId(int HWPIN)
-{
-	_tempSensor.setPid(HWPIN);
-}
-
-void GrowlManager::initHumSensorId(int SCLPIN)
-{
-	_humiditySensor.setPid(SCLPIN);//uses BME PIN as id for hum
-}
+} 
 
 void GrowlManager::setHeaterPin(int HWPIN)
 {
 	_chamber.setHeaterPin(HWPIN);
-	_hvac.setPid(HWPIN);
+	//_hvac.setPid(HWPIN);
 }
 
 void GrowlManager::initLightSensor(int HWPIN)
 {
-	_lightSensor.setPid(HWPIN);
+	//_lightSensor.setPid(HWPIN);
 	_chamber.setLightSensorPin(HWPIN);
 }
 
 void GrowlManager::setDhtPin(int HWPIN)
 {
+	//will set PID in cascade
 	_chamber.setDhtPin(HWPIN);
 }
 

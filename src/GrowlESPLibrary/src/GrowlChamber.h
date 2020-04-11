@@ -10,27 +10,17 @@
 #include <Adafruit_BME280.h>
 
 #include <GrowlSensor.h>
-
-
-
+#include <GrowlActuator.h>
 
 class GrowlChamber
 {
 
 public:
-	GrowlChamber() {
-		//_dht_pin = dht_pin;
-		
-		/*_dht = DHT(dht_pin, dht_type);
-		Serial.print("GrowlChamber constructor, DHT pin=");
-		Serial.println(dht_pin);
-		_dht.begin();*/
-	};
+	GrowlChamber() {};
 	void init();
 	void loop();
 	bool getMainLightsStatus();
 	bool getIntakeFanStatus();
-	bool getOuttakeFanStatus();
 	bool getHeatingStatus();
 	bool switchMainLights(bool on);
 	bool switchIntakeFan(bool on);
@@ -43,33 +33,33 @@ public:
 	void setLightSensorPin(int HWPIN);
 	void setDhtPin(int HWPIN);
 	void setBME280Pin(int SCLPIN, int SDAPIN);
-	int getMainLightsPin();
-	int getIntakeFanPin();
-	int getOuttakeFanPin();
-	int getHeaterPin();
-	int getLightSensorPin();
+	MainLights* getMainLights();
+	IntakeFan* getIntakeFan();
+	OutTakeFan* getOuttakeFan();
+	Hvac* getHeater();
 	float getTemperature();
 	float getHumidity();
 	float getPressure();
 	int getLumen();//NOT real Lumen!
-	
+	BaromenterSensor* getBarometerSensor();
+	TemperatureSensor* getTemperatureSensor();
+	HumiditySensor* getHumiditySensor();
+	LightSensor* getLightSensor();
 private:
-	int _mainLightPIN;
-	int _intakePIN;
-	int _outtakePIN;
-	int _heaterPIN;
-	int _lightSensorPIN;
 	
-	bool _isMainLightsON;
-	bool _isIntakeFanON;
-	bool _isOuttakeON;
-	bool _isHeaterON;
-
 	bool initTemp();
 	int _dht_pin;
-	//int _dht_type;
 	int _SCLPIN;
 	int _SDAPIN;
 
+	OutTakeFan				_outTakeFan;
+	MainLights				_mainLights;
+	Hvac					_hvac;
+	IntakeFan				_inTakeFan;
+
+	LightSensor				_lightSensor;
+	HumiditySensor			_humiditySensor;
+	TemperatureSensor		 _tempSensor;
+	BaromenterSensor		_barometer;
 };
 
