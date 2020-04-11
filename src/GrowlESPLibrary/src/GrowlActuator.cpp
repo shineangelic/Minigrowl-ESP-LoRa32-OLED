@@ -29,7 +29,7 @@ std::string GrowlActuator::toJSON()
 
 	// Add values in the document
 	// 
-	doc["name"] = _name;
+	doc["typ"] = _name;
 	doc["val"] = _reading;
 	doc["id"] = _gpioid;
 	doc["err"] = _errorPresent;
@@ -48,4 +48,19 @@ std::string GrowlActuator::toJSON()
 	int p = serializeJson(doc, s);
 
 	return s;
+}
+
+int GrowlActuator::executeCommand(GrowlCommand exec)
+{
+	if (exec.getTargetActuatorId() != this->getPid()) {
+		return -1;
+		Serial.println("COMMAND EXECUTION ERROR PID MISMATCH");
+	}
+	Serial.print("COMMAND EXEC WRITING PID: ");
+	Serial.print(exec.getTargetActuatorId());
+	Serial.print(" VAL: ");
+	Serial.println(exec.getValueParameter());
+	//digitalWrite(exec.getTargetActuatorId(), exec.getValueParameter());
+	_reading = exec.getValueParameter();
+	//Serial.println(bitRead(PORTD, 3));
 }

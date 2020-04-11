@@ -254,12 +254,16 @@ bool GrowlChamber::switchMainLights(bool on)
 {
 	_isMainLightsON = on;
 	digitalWrite(_mainLightPIN, _isMainLightsON);
+	Serial.print("Switch LIGHT:");
+	Serial.println(on);
 	return _isMainLightsON;
 }
 
 bool GrowlChamber::switchIntakeFan(bool on)
 {
 	_isIntakeFanON = on;
+	Serial.print("Switch FAN:");
+	Serial.println(on);
 	digitalWrite(_intakePIN, _isIntakeFanON);
 	return _isIntakeFanON;
 }
@@ -366,4 +370,5 @@ int GrowlChamber::getLumen()
 	Serial.println(Rsensor, DEC);
 	return 0.0f;*/
 }
+
 

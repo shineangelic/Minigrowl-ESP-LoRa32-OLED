@@ -8,6 +8,7 @@ public:
 	GrowlActuator(int gpid);
 	GrowlActuator();
 	std::string toJSON();
+	int executeCommand(GrowlCommand exec);
 protected:
 	std::string _name;
 	std::vector<GrowlCommand*> _supportedCommands;
@@ -28,8 +29,8 @@ public:
 
 	OutTakeFan() : GrowlActuator() {
 		_name = "F";
-		_supportedCommands.push_back(new GrowlCommand("Turn ON outtake Fan", 1));
-		_supportedCommands.push_back(new GrowlCommand("Turn OFF outtake Fan", 0));
+		_supportedCommands.push_back(new GrowlCommand("Turn ON Fan", 1));
+		_supportedCommands.push_back(new GrowlCommand("Turn OFF Fan", 0));
 	};
 };
 
@@ -39,7 +40,7 @@ public:
 	IntakeFan() : GrowlActuator() {
 		_name = "F";
 		_supportedCommands.push_back(new GrowlCommand("Turn ON intake Fan", 1));
-		_supportedCommands.push_back(new GrowlCommand("Turn intake Fan OFF", 0));
+		_supportedCommands.push_back(new GrowlCommand("Turn Fan OFF", 0));
 	};
 };
 

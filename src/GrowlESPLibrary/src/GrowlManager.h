@@ -5,6 +5,8 @@
 #include <vector>
 #include <time.h>
 #include<iostream> 
+#include <queue>
+#include <deque>
 #include<array> // for array, at() 
 #include<tuple> // for get() 
 
@@ -42,21 +44,25 @@ public:
 	void setDhtPin(int HWPIN);
 	void setBME280Pin(int SCLPIN, int SDAPIN);
 private:
+	void applyServerCommands();
+	void removeExecutedCommand(GrowlCommand* executed);
+	void retrieveServerCommands();
 	void sendSensors();
 	void sendActuators();
 	void chamberLogic();
 	short _pc;//program counter
 	GrowlChamber	_chamber;
 	//std::tm			_time;
-	std::vector<GrowlSensor*> _sensorsPtr;
+	std::vector<GrowlSensor*>	_sensorsPtr;
 	std::vector<GrowlActuator*> _actuatorsPtr;
-	LightSensor		_lightSensor;
-	HumiditySensor  _humiditySensor;
-	TemperatureSensor _tempSensor;
-	MainLights _mainLights;
-	BaromenterSensor _barometer;
-	Hvac	_hvac;
-	IntakeFan		_inTakeFan;
-	OutTakeFan		_outTakeFan;
+	LightSensor				_lightSensor;
+	HumiditySensor			_humiditySensor;
+	TemperatureSensor		 _tempSensor;
+	MainLights				_mainLights;
+	BaromenterSensor		_barometer;
+	Hvac					_hvac;
+	IntakeFan				_inTakeFan;
+	OutTakeFan					_outTakeFan;
+	std::deque<GrowlCommand> _commandsQueue;
 };
 

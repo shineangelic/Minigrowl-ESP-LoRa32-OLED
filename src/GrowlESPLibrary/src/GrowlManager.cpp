@@ -8,12 +8,17 @@
 #include <sstream>
 #include <ostream>
 
+#define ARDUINOJSON_ENABLE_STD_STRING 1
+#include <ArduinoJson.hpp>
+#include <ArduinoJson.h>
 #include "GrowlManager.h"
+#include "GrowlCommand.h"
 
 
 using namespace std;
 
-const char* host = "192.168.0.54:8080";
+const char* host = "192.168.0.54";
+const int httpPort = 8080;
 const float hourSchedule[] = { 1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 
 //LightSensor		_lightSensor(LIGHT_SENSOR);
@@ -49,25 +54,27 @@ void GrowlManager::loop()
 	float luxR = _chamber.getLumen();
 	float hum = _chamber.getHumidity();
 	float temp = _chamber.getTemperature();
-	//std::ostringstream ss;
-	//ss << luxR;
-	//std::string s(ss.str());
+
 	_lightSensor.setReading(luxR);
 	_humiditySensor.setReading(hum);
 	_tempSensor.setReading(temp);
-
-	_mainLights.setReading(_chamber.getMainLightsStatus());
-	_outTakeFan.setReading(_chamber.getOuttakeFanStatus());
-	_inTakeFan.setReading(_chamber.getIntakeFanStatus());
-	_hvac.setReading(_chamber.getHeatingStatus());
 	_barometer.setReading(_chamber.getPressure());
+
+
+	_chamber.switchMainLights(_mainLights.getReading());
+	_chamber.switchOuttakeFan(_outTakeFan.getReading());
+	_chamber.switchIntakeFan(_inTakeFan.getReading());
+	_chamber.switchHeater(_hvac.getReading());
+	//_outTakeFan.setReading(_chamber.getOuttakeFanStatus());
+	//_inTakeFan.setReading(_chamber.getIntakeFanStatus());
+	//_hvac.setReading(_chamber.getHeatingStatus());
 
 	//schedules and conditions
 	chamberLogic();
-
-	//retrieveServerCommands();
-
-	//applyServerCommands();
+	//retrieves new commands
+	retrieveServerCommands();
+	delay(2000);
+	applyServerCommands();
 
 	_chamber.loop();
 
@@ -86,93 +93,151 @@ void GrowlManager::loop()
 
 void GrowlManager::chamberLogic()
 {
-	_chamber.switchHeater(true);
-	_chamber.switchMainLights(true);
+	//_chamber.switchHeater(true);
+	//_chamber.switchMainLights(true);
 
 	//TEST SPINTA
-	if (_pc % 2) {
+	/*if (_pc % 2) {
 		_chamber.switchIntakeFan(true);
 		_chamber.switchOuttakeFan(true);
 	}
 	else {
 		//_chamber.switchIntakeFan(false);
 		//_chamber.switchOuttakeFan(false);
-	}
+	}*/
 	//LIFECYCLE
 	struct tm now;
 	getLocalTime(&now, 0);
 
 	//mainlights schedule
 	_chamber.switchMainLights(hourSchedule[now.tm_hour]);
-
+	_mainLights.setReading(hourSchedule[now.tm_hour]);
 	//heat out take
-	if (_chamber.getTemperature() > 29)
+	if (_chamber.getTemperature() > 29) {
+		_outTakeFan.setReading(1);
 		_chamber.switchOuttakeFan(true);
-	else
+	}
+	else {
+		_inTakeFan.setReading(0);
 		_chamber.switchOuttakeFan(false);
+	}
 
 }
 
-void GrowlManager::retrieveTime()
+
+void GrowlManager::applyServerCommands()
 {
+	if (!_commandsQueue.empty()) {
+		GrowlCommand exec = _commandsQueue.front();
+		//look for actuator
+		for (auto const& value : _actuatorsPtr) {
+			//Se trova, fa pop della coda e delete sul srv
+			if (value->getPid() == exec.getTargetActuatorId()) {
+				_commandsQueue.pop_front();
+				value->executeCommand(exec);
+				Serial.println("COMMAND EXEC, val=");
+				Serial.println(exec.getValueParameter());
+				removeExecutedCommand(&exec);
+				break;
+			}
+
+		}
+	}
+	Serial.print("QUEUE SIZE: ");
+	Serial.println(_commandsQueue.size());
+}
+
+void GrowlManager::removeExecutedCommand(GrowlCommand* executed) {
+
 	WiFiClient client;
 	HTTPClient http;
 
 	// We now create a URI for the request
-	String url = "/api/esp/v1/getTime/";
-
-	Serial.print("Retrieve time: ");
+	String url = "/api/esp/v1/commands/id/";
+	url += executed->getQueueId();
+	Serial.print("DELETE command: ");
 	Serial.println(url);
 
-	Serial.print("HTTP REQ:");
-	http.begin(String("http://") + host + url); //Specify destination for HTTP request
+	http.begin(String("http://") + host + ":" + httpPort + url); //Specify destination for HTTP request
 	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
-	int httpResponseCode = http.GET(); //Send the actual POST request
+	std::string s("");
+	//s = executed->toJSONstr();
+	//Serial.print(s.c_str());
+	int httpResponseCode = http.POST(s.c_str()); //Send the actual POST request
+
+	Serial.print("HTTP RESPONSE:");
+	Serial.println(httpResponseCode);
+	//Serial.println(_lightSensor.toJSON().c_str());
+	http.end();
+}
+
+void GrowlManager::retrieveServerCommands()
+{
+	WiFiClient client;
+	HTTPClient http;
+
+	if (!client.connect(host, httpPort)) {
+		Serial.println("retrieveServerCommands() connection failed");
+		return;
+	}
+
+	// We now create a URI for the request
+	String urlPath = "/api/esp/v1/commands/";
+	String completeUrl = String("http://") + host + ":" + httpPort + urlPath;
+
+	Serial.print("retrieveServerCommands: ");
+	Serial.println(completeUrl);
+
+	http.begin(completeUrl); //Specify destination for HTTP request
+	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
+	int httpResponseCode = http.GET();
 
 	Serial.print("HTTP RESPONSE:");
 	Serial.println(httpResponseCode);
 	if (httpResponseCode > 0) { //Check for the returning code
-		std::tm			chtime;
 
 		String payload = http.getString();
-		payload.replace("\"", "");
-		Serial.print("Payload: ");
 		Serial.println(payload);
-		const char* format = "%Y-%m-%dT%H:%M:%S";
-		strptime(payload.c_str(), format, &chtime);
+		// compute the required size
+		const size_t CAPACITY = JSON_ARRAY_SIZE(3);
 
-		//debug only
-		Serial.print("Chamber time(UTC): ");
-		char chDate[11] = "";
-		char chTime[9] = "";
-		strftime(chDate, 11, "%m/%d/%Y", &chtime);
-		strftime(chTime, 9, "%H:%M:%S", &chtime);
-		Serial.print(chDate);
-		Serial.print(" ");
-		Serial.println(chTime);
+		// allocate the memory for the document
+		DynamicJsonDocument doc(2000);
 
-		int epoch_time = mktime(&chtime);
-		timeval epoch = { epoch_time, 0 };
-		const timeval* tv = &epoch;
-		settimeofday(tv, NULL);//vaffanculo
+		// parse a JSON array
+		DeserializationError err = deserializeJson(doc, payload);
+		if (err) {
+			Serial.print(F("deserializeJson() failed with code "));
+			Serial.println(err.c_str());
+		}
 
+		// extract the values
+		JsonArray array = doc.as<JsonArray>();
+		for (JsonVariant v : array) {
+			GrowlCommand newC = GrowlCommand(v);
+			bool skip = false;
+			//se c'e` gia` scartalo
+			for (GrowlCommand& cmdCheck : _commandsQueue) {
+				if (cmdCheck.getQueueId() == newC.getQueueId()) {
+					Serial.println("Skippin Queue push");
+					skip = true;
+					break;
+				}
+			}
+			if (!skip) {
+				Serial.print("Queue push ID: ");
+				Serial.println(newC.getQueueId());
+				_commandsQueue.push_front(newC);
+			}
+		}
 	}
+
 	else {
-		Serial.println("Error on HTTP time request");
+		Serial.println("Error on HTTP request");
 	}
 
 	http.end();
-
-
-	//VERIFICA
-	struct tm now;
-	getLocalTime(&now, 0);
-	Serial.println(&now, " %B %d %Y %H:%M:%S (%A)");
-	delay(1000);
 }
-
-
-
 void GrowlManager::sendSensors()
 {
 	WiFiClient client;
@@ -193,7 +258,7 @@ void GrowlManager::sendSensors()
 	Serial.print("HTTP REQ:");
 	Serial.println(toSend->toJSON().c_str());
 
-	http.begin(String("http://") + host + url); //Specify destination for HTTP request
+	http.begin(String("http://") + host + ":" + httpPort + url); //Specify destination for HTTP request
 	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
 	int httpResponseCode = http.PUT(toSend->toJSON().c_str()); //Send the actual POST request
 
@@ -218,7 +283,7 @@ void GrowlManager::sendActuators()
 	Serial.print("HTTP REQ:");
 	try {
 		Serial.println(toSend->toJSON().c_str());
-		http.begin(String("http://") + host + url); //Specify destination for HTTP request
+		http.begin(String("http://") + host + ":" + httpPort + url); //Specify destination for HTTP request
 		http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
 		int httpResponseCode = http.PUT(toSend->toJSON().c_str()); //Send the actual POST request
 
@@ -229,9 +294,6 @@ void GrowlManager::sendActuators()
 	catch (int e) {
 		Serial.print("ERRORE GATTICO An exception occurred. Exception Nr. " + e);
 	}
-
-
-
 }
 
 
@@ -268,7 +330,6 @@ std::string GrowlManager::reportStatus()
 	ss << chTime;
 	//std::string s(ss.str());
 	return ss.str();
-	//return std::to_string(_chamber.getHumidity()) << std::to_string(_chamber.getTemperature());
 }
 
 std::tm GrowlManager::getGrowlManagerTime() {
