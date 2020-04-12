@@ -33,21 +33,25 @@ public:
 	void setLightSensorPin(int HWPIN);
 	void setDhtPin(int HWPIN);
 	void setBME280Pin(int SCLPIN, int SDAPIN);
+	bool hasErrors();
 	MainLights* getMainLights();
 	IntakeFan* getIntakeFan();
 	OutTakeFan* getOuttakeFan();
 	Hvac* getHeater();
-	float getTemperature();
-	float getHumidity();
+	//float getTemperature();
+	//float getHumidity();
 	float getPressure();
 	int getLumen();//NOT real Lumen!
 	BaromenterSensor* getBarometerSensor();
 	TemperatureSensor* getTemperatureSensor();
 	HumiditySensor* getHumiditySensor();
+	TemperatureSensor* getExternalTemperatureSensor();
+	HumiditySensor* getExternalHumiditySensor();
 	LightSensor* getLightSensor();
 private:
 	
 	bool initTemp();
+	static void tempTask(void* pvParameters);
 	int _dht_pin;
 	int _SCLPIN;
 	int _SDAPIN;
@@ -57,9 +61,11 @@ private:
 	Hvac					_hvac;
 	IntakeFan				_inTakeFan;
 
-	LightSensor				_lightSensor;
-	HumiditySensor			_humiditySensor;
-	TemperatureSensor		 _tempSensor;
-	BaromenterSensor		_barometer;
+	LightSensor					_lightSensor;
+	HumiditySensor				_humiditySensor;
+	TemperatureSensor			_tempSensor;
+	HumiditySensor				_humiditySensorExt;
+	TemperatureSensor			_tempSensorExt;
+	BaromenterSensor			_barometer;
 };
 

@@ -52,6 +52,7 @@ Connect 15 to RX of SI UART
 
 #define LIGHT_SENSOR 33
 #define DHTPIN 22 
+#define ERRPIN 23
 
 //grow room service coordinator
 GrowlManager gm = GrowlManager();
@@ -97,6 +98,9 @@ void setup(void)
 	pinMode(DHTPIN, INPUT);
 	 
 	gm.setBME280Pin(SCL, SDA);
+
+
+	pinMode(ERRPIN, OUTPUT);
 
 	//call chamber delegate AFTER having set PINs
 	gm.initChamber();
@@ -153,21 +157,17 @@ void loop(void)
 	
 	Serial.print("Free Heap: ");
 	Serial.println(ESP.getFreeHeap());
-	// Display the results (total active energy in Wh)
-	/*if (event.current) {
-		//print DB debug
-		Serial.println(siClient.debugDbContents().c_str());
-		Serial.print("Free Heap: ");
-		Serial.println(ESP.getFreeHeap());
-	}*/
-
-	//delay(100);
+	 
 
 	//Serial.print(gm.reportStatus().c_str());
 	drawText();
-
+	delay(500);
 	//Serial.print("connecting to ");
 	//Serial.println(host);
+	if (gm.hasChamberError())
+		digitalWrite(ERRPIN, HIGH);
+	else
+		digitalWrite(ERRPIN, LOW);
 
 	// Use WiFiClient class to create TCP connections
 	//doTestGet();
@@ -175,59 +175,6 @@ void loop(void)
 
 
 }
-/*
-void doTestGet() {
-	WiFiClient client;
-	const int httpPort = 8080;
-	if (!client.connect(host, httpPort)) {
-		Serial.println("connection failed");
-		return;
-	}
-
-	// We now create a URI for the request
-	String url = "/command/download/";
-
-
-	Serial.print("Requesting URL: ");
-	Serial.println(url);
-
-	// This will send the request to the server
-	client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-		"Host: " + host + "\r\n" +
-		"Connection: close\r\n\r\n");
-	unsigned long timeout = millis();
-	while (client.available() == 0) {
-		if (millis() - timeout > 5000) {
-			Serial.println(">>> Client Timeout !");
-			client.stop();
-			return;
-		}
-	}
-
-	// Read all the lines of the reply from server and print them to Serial
-	while (client.available()) {
-		String line = client.readStringUntil('\r');
-		Serial.println(line);
-		ARDUINOJSON_NAMESPACE::StaticJsonDocument<400> doc;
-		ARDUINOJSON_NAMESPACE::DeserializationError err;
-		err = ARDUINOJSON_NAMESPACE::deserializeJson(doc, line);
-		if (err) {
-			//Serial.print(F("deserializeJson() failed: "));
-			//Serial.println(err.c_str());
-			continue;
-		}
-		else {
-			// Fetch values.
-			//
-			// Most of the time, you can rely on the implicit casts.
-			// In other case, you can do doc["time"].as<long>();
-			const char* sensor = doc["parameter"];
-			Serial.print("SENSOR FROM JSON:");
-			Serial.println(sensor);
-		}
-		break;
-	}
-}*/
 
 void drawText() {
 	display.clear();

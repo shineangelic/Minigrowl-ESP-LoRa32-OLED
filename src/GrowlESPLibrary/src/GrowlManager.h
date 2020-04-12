@@ -36,7 +36,7 @@ public:
 	void initMainLights(int HWPIN);
 	void initIntakeFan(int HWPIN);
 	void initOuttakeFanPin(int HWPIN);
-
+	bool hasChamberError();
 	void setHeaterPin(int HWPIN);
 	void initLightSensor(int HWPIN);
 	void setDhtPin(int HWPIN);

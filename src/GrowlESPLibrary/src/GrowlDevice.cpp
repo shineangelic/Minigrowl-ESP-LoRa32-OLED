@@ -22,3 +22,8 @@ void GrowlDevice::setHasError(float inErr)
 {
 	_errorPresent = inErr;
 }
+
+bool GrowlDevice::hasError()
+{
+	return _errorPresent;
+}

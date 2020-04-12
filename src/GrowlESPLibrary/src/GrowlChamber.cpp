@@ -5,12 +5,16 @@
 https://github.com/beegee-tokyo/DHTesp/blob/master/examples/DHT_ESP32/DHT_ESP32.ino
 
 uses beegee-tokyo DHT lib
+
+represents a grow chamber, with two temperature&hum sensors and 4 commandable devices,
+here named lights, outFan and inFan and Heater
 */
 #define TIMER_INTERVAL_SECONDS 20
 #define BME280_INTERVAL_MSEC 100000
+#define EXT_OFFSET 32
 
 /** Task handle to retrieve sensors value */
-void tempTask(void* pvParameters);
+//void tempTask(void* pvParameters);
 void triggerGetTemp();
 void retrieveTemperatureTask();
 TaskHandle_t tempTaskHandle = NULL;
@@ -21,7 +25,10 @@ Adafruit_BME280 bme;
 
 float _curTemp;
 float _curHum;
+float _curTempExt;
+float _curHumExt;
 float _pressure;
+bool _dhtErr, _bme280Err;
 
 /** Ticker for temperature reading */
 Ticker tempTicker;
@@ -29,8 +36,6 @@ Ticker tempTicker;
 ComfortState cf;
 /** Flag if task should run */
 bool tasksEnabled = false;
-
-
 
 
 /* DEVONO ESSERE STATE GIA CHIAMATE LE SETPIN */
@@ -44,12 +49,15 @@ void GrowlChamber::init()
 	bool status1 = bme.begin(0x76, &I2Cone);
 	if (!status1) {
 		Serial.println("Could not find a valid BME280_1 sensor, check wiring!");
+		_tempSensor.setHasError(true);
+		_humiditySensor.setHasError(true);
 		initOK = false;
 	}
 
 	if (!initOK)
 	{
 		Serial.println("GrowlChamber init ERROR, please reboot");
+
 		return;
 	}
 
@@ -75,6 +83,13 @@ void GrowlChamber::loop()
 	_lightSensor.setReading(getLumen());
 	_tempSensor.setReading(_curTemp);
 	_humiditySensor.setReading(_curHum);
+	_tempSensor.setHasError(_bme280Err);
+	_humiditySensor.setHasError(_bme280Err);
+
+	_tempSensorExt.setReading(_curTempExt);
+	_humiditySensorExt.setReading(_curHumExt);
+	_tempSensorExt.setHasError(_dhtErr);
+	_humiditySensorExt.setHasError(_dhtErr);
 
 	//operate relays
 	digitalWrite(_mainLights.getPid(), _mainLights.getReading());
@@ -86,7 +101,7 @@ void GrowlChamber::loop()
 
 	yield();
 }
- 
+
 /**
  * initTemp
  * Setup DHT library
@@ -113,6 +128,7 @@ bool GrowlChamber::initTemp() {
 		1);                             /* Core where the task should run */
 
 	if (tempTaskHandle == NULL) {
+		_humiditySensor.setHasError(true);
 		Serial.println("Failed to start task for temperature update");
 		return false;
 	}
@@ -122,7 +138,7 @@ bool GrowlChamber::initTemp() {
 	}
 	return true;
 }
-
+ 
 
 /**
  * triggerGetTemp
@@ -140,7 +156,7 @@ void  triggerGetTemp() {
  * @param pvParameters
  *    pointer to task parameters
  */
-void tempTask(void* pvParameters) {
+void GrowlChamber::tempTask(void* pvParameters) {
 	Serial.println("tempTask loop started");
 	while (1) // tempTask loop
 	{
@@ -167,10 +183,11 @@ void retrieveTemperatureTask() {
 	// Check if any reads failed and exit early (to try again).
 	if (_dht.getStatus() != 0) {
 		Serial.println("DHT22 error status: " + String(_dht.getStatusString()));
+		_dhtErr = true;
+		//_tempSensorExt.setHasError(true);
 		//return;
-	}
-	else {
-
+	}else {
+		_dhtErr = false;
 		float heatIndex = _dht.computeHeatIndex(newValues.temperature, newValues.humidity);
 		float dewPoint = _dht.computeDewPoint(newValues.temperature, newValues.humidity);
 		float cr = _dht.getComfortRatio(cf, newValues.temperature, newValues.humidity);
@@ -208,10 +225,11 @@ void retrieveTemperatureTask() {
 			comfortStatus = "Unknown:";
 			break;
 		};
-		_curTemp = newValues.temperature;
-		_curHum = newValues.humidity;
+		_curTempExt = newValues.temperature;
+		_curHumExt = newValues.humidity;
 		Serial.println("DHT22:  T:" + String(newValues.temperature) + " H:" + String(newValues.humidity) + " I:" + String(heatIndex) + " D:" + String(dewPoint) + " " + comfortStatus);
 	}
+
 	float temperature = bme.readTemperature();
 	float humidity = bme.readHumidity();
 	float pressure = bme.readPressure() / 100.0F;
@@ -221,18 +239,16 @@ void retrieveTemperatureTask() {
 	Serial.println(humidity);
 
 
-	//failsafe per DHT22 che fa schifo
-	if (_curTemp != 0) {
-
-		_curTemp = (_curTemp + temperature) / 2;
-		_curHum = (_curHum + humidity) / 2;
+	if (isnan(temperature) || isnan(humidity)) {
+		Serial.println("Failed to read from BME280 sensor!");
+		_bme280Err = true;
+		return;
 	}
-	else {
-		_curTemp = temperature;
-		_curHum = humidity;
-	}
+	_bme280Err = false;
+	_curTemp = temperature;
+	_curHum = humidity;
 	_pressure = pressure;
-	
+
 }
 
 
@@ -246,7 +262,7 @@ bool GrowlChamber::getIntakeFanStatus()
 {
 	return _inTakeFan.getReading() > 0;
 }
- 
+
 
 bool GrowlChamber::getHeatingStatus()
 {
@@ -255,7 +271,7 @@ bool GrowlChamber::getHeatingStatus()
 
 bool GrowlChamber::switchMainLights(bool on)
 {
-	_mainLights.setReading(on?1:0);
+	_mainLights.setReading(on ? 1 : 0);
 	digitalWrite(_mainLights.getPid(), _mainLights.getReading());
 	return _mainLights.getReading();
 }
@@ -269,7 +285,7 @@ bool GrowlChamber::switchIntakeFan(bool on)
 
 bool GrowlChamber::switchOuttakeFan(bool on)
 {
-	_outTakeFan.setReading(on? 1 : 0);
+	_outTakeFan.setReading(on ? 1 : 0);
 	digitalWrite(_outTakeFan.getPid(), on);
 	return on;
 }
@@ -283,7 +299,7 @@ bool GrowlChamber::switchHeater(bool on)
 
 void GrowlChamber::setMainLightsPin(int HWPIN)
 {
-	_mainLights.setPid(HWPIN); 
+	_mainLights.setPid(HWPIN);
 }
 
 void GrowlChamber::setIntakeFanPin(int HWPIN)
@@ -303,7 +319,6 @@ void GrowlChamber::setHeaterPin(int HWPIN)
 
 void GrowlChamber::setLightSensorPin(int HWPIN)
 {
-	//_lightSensorPIN = HWPIN;
 	_lightSensor.setPid(HWPIN);
 }
 
@@ -311,6 +326,7 @@ void GrowlChamber::setDhtPin(int HWPIN)
 {
 	_dht_pin = HWPIN;
 	_tempSensor.setPid(HWPIN);
+	_tempSensorExt.setPid(HWPIN + EXT_OFFSET);
 }
 
 void GrowlChamber::setBME280Pin(int SCLPIN, int SDAPIN)
@@ -319,7 +335,13 @@ void GrowlChamber::setBME280Pin(int SCLPIN, int SDAPIN)
 	_SDAPIN = SDAPIN;
 	_barometer.setPid(SDA);
 	_humiditySensor.setPid(SCLPIN);
-	
+	_humiditySensorExt.setPid(SCLPIN + EXT_OFFSET);
+
+}
+
+bool GrowlChamber::hasErrors()
+{
+	return _dhtErr || _bme280Err || _lightSensor.getReading() < 300;
 }
 
 MainLights* GrowlChamber::getMainLights()
@@ -342,9 +364,7 @@ Hvac* GrowlChamber::getHeater()
 	return &_hvac;
 }
 
- 
-
-float GrowlChamber::getTemperature()
+/*float GrowlChamber::getTemperature()
 {
 	return _curTemp;
 }
@@ -354,7 +374,7 @@ float GrowlChamber::getHumidity()
 	//object for static? Im no good at C++ :(
 	return _curHum;
 }
-
+*/
 float GrowlChamber::getPressure()
 {
 	return _pressure;
@@ -385,6 +405,16 @@ TemperatureSensor* GrowlChamber::getTemperatureSensor()
 HumiditySensor* GrowlChamber::getHumiditySensor()
 {
 	return &_humiditySensor;
+}
+
+TemperatureSensor* GrowlChamber::getExternalTemperatureSensor()
+{
+	return &_tempSensorExt;
+}
+
+HumiditySensor* GrowlChamber::getExternalHumiditySensor()
+{
+	return &_humiditySensorExt;
 }
 
 LightSensor* GrowlChamber::getLightSensor()

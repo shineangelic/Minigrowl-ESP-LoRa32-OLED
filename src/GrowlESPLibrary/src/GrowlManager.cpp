@@ -38,6 +38,8 @@ void GrowlManager::initChamber()
 	_sensorsPtr.push_back(_chamber.getTemperatureSensor());
 	_sensorsPtr.push_back(_chamber.getHumiditySensor());
 	_sensorsPtr.push_back(_chamber.getBarometerSensor());
+	_sensorsPtr.push_back(_chamber.getExternalTemperatureSensor());
+	_sensorsPtr.push_back(_chamber.getExternalHumiditySensor());
 
 
 	_actuatorsPtr.push_back(_chamber.getIntakeFan());
@@ -51,40 +53,27 @@ void GrowlManager::loop()
 	_pc++;
 
 	//hw readings
-	float luxR = _chamber.getLumen();
+	/*float luxR = _chamber.getLumen();
 	float hum = _chamber.getHumidity();
-	float temp = _chamber.getTemperature();
+	float temp = _chamber.getTemperature();*/
 
-	//_lightSensor.setReading(luxR);
-	//_humiditySensor.setReading(hum);
-	//_tempSensor.setReading(temp);
-	//_barometer.setReading(_chamber.getPressure());
-
-
-	//_chamber.switchMainLights(_mainLights.getReading());
-	//_chamber.switchOuttakeFan(_outTakeFan.getReading());
-	//_chamber.switchIntakeFan(_inTakeFan.getReading());
-	//_chamber.switchHeater(_hvac.getReading());
-	//_outTakeFan.setReading(_chamber.getOuttakeFanStatus());
-	//_inTakeFan.setReading(_chamber.getIntakeFanStatus());
-	//_hvac.setReading(_chamber.getHeatingStatus());
 
 	//schedules and conditions
 	chamberLogic();
 	//retrieves new commands
 	retrieveServerCommands();
+
 	delay(2000);
 	applyServerCommands();
 
+	//let the chamber do its readings
 	_chamber.loop();
+	delay(500);
 
-	//delay(2000);
-
+	//these are sent one per PC
+	sendSensors();
 	delay(2000);
-	if (_pc % 3 == 0)
-		sendSensors();
-	else
-		sendActuators();
+	sendActuators();
 	delay(2000);
 
 	//non va, per la storia UTC. Alla fine uso NTP
@@ -113,12 +102,10 @@ void GrowlManager::chamberLogic()
 	_chamber.switchMainLights(hourSchedule[now.tm_hour]);
 	//_mainLights.setReading(hourSchedule[now.tm_hour]);
 	//heat out take
-	if (_chamber.getTemperature() > 29) {
-		//_outTakeFan.setReading(1);
+	if (_chamber.getTemperatureSensor()->getReading() > 29) {
 		_chamber.switchOuttakeFan(true);
 	}
 	else {
-		//_inTakeFan.setReading(0);
 		_chamber.switchOuttakeFan(false);
 	}
 
@@ -138,7 +125,7 @@ void GrowlManager::applyServerCommands()
 				Serial.println("COMMAND EXEC, val=");
 				Serial.println(exec.getValueParameter());
 				bool removed = removeExecutedCommand(&exec);
-				
+
 				break;
 			}
 
@@ -324,9 +311,9 @@ std::string GrowlManager::reportStatus()
 	ss << (_chamber.getOuttakeFan()->getReading() != 0 ? "ON" : "OFF");
 	ss << "\n";
 	ss << "Hum: ";
-	ss << (std::ceil(this->getChamber().getHumidity() * 10) / 10) << "%";
+	ss << (std::ceil(this->getChamber().getHumiditySensor()->getReading() * 10) / 10) << "%";
 	ss << " Temp: ";
-	ss << (std::ceil(this->getChamber().getTemperature() * 10) / 10) << "°C";
+	ss << (std::ceil(this->getChamber().getTemperatureSensor()->getReading() * 10) / 10) << "°C";
 	ss << "\n";
 	ss << "Lumen: ";
 	ss << this->getChamber().getLumen() << "lux";
@@ -359,23 +346,25 @@ void GrowlManager::initIntakeFan(int HWPIN)
 void GrowlManager::initOuttakeFanPin(int HWPIN)
 {
 	_chamber.setOuttakeFanPin(HWPIN);
-} 
+}
+
+bool GrowlManager::hasChamberError()
+{
+	return _chamber.hasErrors();
+}
 
 void GrowlManager::setHeaterPin(int HWPIN)
 {
 	_chamber.setHeaterPin(HWPIN);
-	//_hvac.setPid(HWPIN);
 }
 
 void GrowlManager::initLightSensor(int HWPIN)
 {
-	//_lightSensor.setPid(HWPIN);
 	_chamber.setLightSensorPin(HWPIN);
 }
 
 void GrowlManager::setDhtPin(int HWPIN)
 {
-	//will set PID in cascade
 	_chamber.setDhtPin(HWPIN);
 }
 
