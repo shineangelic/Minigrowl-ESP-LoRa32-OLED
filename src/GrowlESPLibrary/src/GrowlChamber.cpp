@@ -57,10 +57,10 @@ void GrowlChamber::init()
 	if (!initOK)
 	{
 		Serial.println("GrowlChamber init ERROR, please reboot");
-
+		_tempSensorExt.setHasError(true);
+		_humiditySensorExt.setHasError(true);
 		return;
 	}
-
 	// Signal end of setup() to tasks
 	tasksEnabled = true;
 }
@@ -83,13 +83,20 @@ void GrowlChamber::loop()
 	_lightSensor.setReading(getLumen());
 	_tempSensor.setReading(_curTemp);
 	_humiditySensor.setReading(_curHum);
-	_tempSensor.setHasError(_bme280Err);
-	_humiditySensor.setHasError(_bme280Err);
-
 	_tempSensorExt.setReading(_curTempExt);
 	_humiditySensorExt.setReading(_curHumExt);
+
+	_barometer.setHasError(_bme280Err);
+	_tempSensor.setHasError(_bme280Err);
+	_humiditySensor.setHasError(_bme280Err);
 	_tempSensorExt.setHasError(_dhtErr);
 	_humiditySensorExt.setHasError(_dhtErr);
+
+	//lampada accesa col buio?
+	if (_lightSensor.getReading() < 200 && _mainLights.getReading() > 0) {
+		_mainLights.setHasError(true);
+	}
+	else { _mainLights.setHasError(false); }
 
 	//operate relays
 	digitalWrite(_mainLights.getPid(), _mainLights.getReading());
@@ -341,7 +348,7 @@ void GrowlChamber::setBME280Pin(int SCLPIN, int SDAPIN)
 
 bool GrowlChamber::hasErrors()
 {
-	return _dhtErr || _bme280Err || _lightSensor.getReading() < 300;
+	return _dhtErr || _bme280Err;
 }
 
 MainLights* GrowlChamber::getMainLights()

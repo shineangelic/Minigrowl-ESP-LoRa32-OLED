@@ -1,5 +1,9 @@
 #pragma once
-/*Abstract device, could be a Sensor or an Actuator*/
+/*Abstract device, could be a Sensor or an Actuator.
+
+It is bound to a real PIN, and is possibly in error
+
+*/
 class GrowlDevice
 {
 public:

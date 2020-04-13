@@ -4,15 +4,6 @@
 #include <ArduinoJson.h>
 using namespace ARDUINOJSON_NAMESPACE;
 
-GrowlActuator::GrowlActuator(int gpid)
-{
-	_gpioid = gpid;
-}
-
-GrowlActuator::GrowlActuator()
-{
-}
-
 std::string GrowlActuator::toJSON()
 {
 	// Allocate the JSON document
@@ -33,8 +24,9 @@ std::string GrowlActuator::toJSON()
 	doc["val"] = _reading;
 	doc["id"] = _gpioid;
 	doc["err"] = _errorPresent;
+	doc["mode"] = _mode;
 
-	// create an empty array
+	// array dei comandi supportati
 	JsonArray array = doc.createNestedArray("cmds");
 
 	std::vector<GrowlCommand*>::iterator iter, end;
@@ -50,11 +42,24 @@ std::string GrowlActuator::toJSON()
 	return s;
 }
 
+short GrowlActuator::getMode()
+{
+	return _mode;
+}
+
 int GrowlActuator::executeCommand(GrowlCommand exec)
 {
 	if (exec.getTargetActuatorId() != this->getPid()) {
 		return -1;
 		Serial.println("COMMAND EXECUTION ERROR PID MISMATCH");
+	}
+	if (exec.getValueParameter() == MODE_AUTO || exec.getValueParameter() == MODE_MANUAL) {
+		_mode = exec.getValueParameter();
+		return 1; //mode changed
+	}
+	if (this->getMode() == MODE_AUTO) {
+		Serial.println("COMMAND NOT EXECUTED, AUTO MODE");
+		return -1;
 	}
 	Serial.print("COMMAND EXEC WRITING PID: ");
 	Serial.print(exec.getTargetActuatorId());

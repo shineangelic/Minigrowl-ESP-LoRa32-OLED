@@ -1,24 +1,22 @@
 // 
 /*
+
+Minigrowl main sketch. It will create a GrowlManager object and cycle thru its loop.
+The Growlmanager has a GrowlChamber, which contains the abstracion of real devices (actuators)
+and sensors. The GrowlManager comunicates via JSON with the spring-boot server, its address has to be configured in this sketch
+as well as devices Pin connections
+
 Created:	03/07/2018 20:07:15
 Author:     CRONER\Ale
 */
-
-
-#include <ArduinoJson.hpp>
-#include <ArduinoJson.h> 
- 
 #include <SSD1306Wire.h>
 #include <OLEDDisplayUi.h>
 #include <OLEDDisplayFonts.h>
 #include <OLEDDisplay.h>
-#include <HardwareSerial.h>
-#include <SoftwareSerial.h>
 #include "SSD1306.h"
 #include <WiFi.h>
 #include "time.h"
 #include <GrowlManager.h> 
-
 
 
 /* Sketch to demonstrate basic SI odel functionality
@@ -46,13 +44,13 @@ Connect 15 to RX of SI UART
 #define OUTTAKE_FAN	13
 #define INTAKE_FAN	2
 #define OLED		16
-
+//BME280 temperature sensor
 #define SCL 17
 #define SDA 21
 
 #define LIGHT_SENSOR 33
 #define DHTPIN 22 
-#define ERRPIN 23
+#define ERRPIN 23//error LED
 
 //grow room service coordinator
 GrowlManager gm = GrowlManager();
@@ -78,7 +76,7 @@ void setup(void)
 {
 	Serial.begin(57600);
  
-	//CONFIGURE YOUR DEVICES HERE
+	//CONFIGURE DEVICES PIN
 	pinMode(MAIN_LIGHTS, OUTPUT);
 	gm.initMainLights(MAIN_LIGHTS);
 
@@ -98,7 +96,6 @@ void setup(void)
 	pinMode(DHTPIN, INPUT);
 	 
 	gm.setBME280Pin(SCL, SDA);
-
 
 	pinMode(ERRPIN, OUTPUT);
 
@@ -152,27 +149,20 @@ void printLocalTime() {
 void loop(void)
 {
 	gm.loop();
-	delay(500);
-	/*OLED Report*/
 	
 	Serial.print("Free Heap: ");
 	Serial.println(ESP.getFreeHeap());
 	 
 
-	//Serial.print(gm.reportStatus().c_str());
+	/*OLED Report*/
 	drawText();
 	delay(500);
-	//Serial.print("connecting to ");
-	//Serial.println(host);
+
+	//Report error physically
 	if (gm.hasChamberError())
 		digitalWrite(ERRPIN, HIGH);
 	else
 		digitalWrite(ERRPIN, LOW);
-
-	// Use WiFiClient class to create TCP connections
-	//doTestGet();
-
-
 
 }
 

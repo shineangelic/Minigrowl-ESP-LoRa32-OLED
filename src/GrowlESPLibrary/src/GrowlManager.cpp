@@ -51,13 +51,7 @@ void GrowlManager::initChamber()
 void GrowlManager::loop()
 {
 	_pc++;
-
-	//hw readings
-	/*float luxR = _chamber.getLumen();
-	float hum = _chamber.getHumidity();
-	float temp = _chamber.getTemperature();*/
-
-
+ 
 	//schedules and conditions
 	chamberLogic();
 	//retrieves new commands
@@ -85,21 +79,13 @@ void GrowlManager::chamberLogic()
 	//_chamber.switchHeater(true);
 	//_chamber.switchMainLights(true);
 
-	//TEST SPINTA
-	/*if (_pc % 2) {
-		_chamber.switchIntakeFan(true);
-		_chamber.switchOuttakeFan(true);
-	}
-	else {
-		//_chamber.switchIntakeFan(false);
-		//_chamber.switchOuttakeFan(false);
-	}*/
 	//LIFECYCLE
 	struct tm now;
 	getLocalTime(&now, 0);
 
 	//mainlights schedule
-	_chamber.switchMainLights(hourSchedule[now.tm_hour]);
+	if (_chamber.getMainLights()->getMode == MODE_AUTO)
+		_chamber.switchMainLights(hourSchedule[now.tm_hour]);
 	//_mainLights.setReading(hourSchedule[now.tm_hour]);
 	//heat out take
 	if (_chamber.getTemperatureSensor()->getReading() > 29) {
@@ -181,10 +167,8 @@ void GrowlManager::retrieveServerCommands()
 	http.begin(completeUrl); //Specify destination for HTTP request
 	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
 	int httpResponseCode = http.GET();
-
-	Serial.print("HTTP RESPONSE:");
-	Serial.println(httpResponseCode);
-	if (httpResponseCode > 0) { //Check for the returning code
+	 
+	if (httpResponseCode == 200) { //Check for the returning code
 
 		String payload = http.getString();
 		Serial.println(payload);
@@ -220,10 +204,9 @@ void GrowlManager::retrieveServerCommands()
 				_commandsQueue.push_front(newC);
 			}
 		}
-	}
-
-	else {
-		Serial.println("Error on HTTP request");
+	} else {
+		Serial.print("Error on HTTP request: ");
+		Serial.println(httpResponseCode); 
 	}
 
 	http.end();

@@ -5,9 +5,9 @@ VisualStudioVersion = 16.0.29503.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Minigrowl", "Minigrowl.vcxproj", "{C5F80730-F44F-4478-BDAE-6634EFC2CA88}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sketch1Test", "..\Sketch1Test\Sketch1Test.vcxproj", "{9ED35C2C-D38A-4CE5-B878-7CA8EBCE24A2}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GrowlESPLibrary", "src\GrowlESPLibrary\GrowlESPLibrary.vcxitems", "{E8B4BC01-65BD-47AE-8E2D-80A11DA6B3C8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SketchDHT22test", "..\Sketch1Test\Sketch1Test.vcxproj", "{9ED35C2C-D38A-4CE5-B878-7CA8EBCE24A2}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
