@@ -65,3 +65,9 @@ This is the class representing real hardware. It `has-a` pointer to devices and 
 ### GrowlManager.cpp
 
 Main ESP32 software controller. It `has-a` chamber and communicates via JSON to exchange devices.
+
+![dev HW](docs/hw2.jpg)
+
+## warning
+please note that is an amateur past-time work. Do not use it in professional environments
+
