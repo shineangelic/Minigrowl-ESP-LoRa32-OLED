@@ -5,6 +5,8 @@ The project implements in C++ a similar entity structure found at upper level of
 
 # Required Hardware
 
+![dev OLED](https://drive.google.com/file/d/16oeYaYlQ3OoXt1ZcIxCYmBObSuh_ypYA/view?usp=sharing)
+
 the sketch is made to compile on a ESP32 WiFi LoRa device, but should be easily compiled on other ESP32 devices.
 Here is an example PIN usage. You will need a DHT22 (temperature sensor) and BMS280 (temperature) to run the code as-is.
 
