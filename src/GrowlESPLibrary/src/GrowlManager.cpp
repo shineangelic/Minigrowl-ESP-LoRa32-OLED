@@ -84,7 +84,7 @@ void GrowlManager::chamberLogic()
 	getLocalTime(&now, 0);
 
 	//mainlights schedule
-	if (_chamber.getMainLights()->getMode == MODE_AUTO)
+	if (_chamber.getMainLights()->getMode() == MODE_AUTO)
 		_chamber.switchMainLights(hourSchedule[now.tm_hour]);
 	//_mainLights.setReading(hourSchedule[now.tm_hour]);
 	//heat out take

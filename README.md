@@ -1,14 +1,23 @@
 # Minigrowl-ESP-LoRa32-OLED
 minimal firmware w/ JSON test processing to drive a growroom. The project is made of three part, this is the device driver. It is designed to operate a main light at predetermined time and take some specific actions if air is too dry and/or hot. It reports sensors state to a spring server and download a list of commands to be executed.
 
+It works looping over chamber logic, sensors readings and JSON communications with a server (optional, for now), thanks to [Arduino JSON](https://arduinojson.org/). A sketch is provided as an example of how I am configuring my own device.
+
 The project implements in C++ a similar entity structure found at upper level of abstraction: `Sensors`, `Actuators` and `Commands`. Even though this is an arguable design choice, it was made to exploit Objects potentiality even at lower abstraction level. Considering that this project's target board The Haltec WiFi OLED is very cheap but offer much juice, I felt guilty not to use dynamic JSON objects and other memory-expensive stuff.
 
 # Required Hardware
 
 ![dev OLED](/docs/oledTest.jpg)
 
+* ESP32 board with OLED (optional, actually)
+* DHT22 temperature sensor (optional, used for external room temp)
+* BME280 main chamber pressure, temperature and humidity sensor
+* 4 relay board, to operate devices 
+
 the sketch is made to compile on a ESP32 WiFi LoRa device, but should be easily compiled on other ESP32 devices.
 Here is an example PIN usage. You will need a DHT22 (temperature sensor) and BMS280 (temperature) to run the code as-is.
+
+This is how I set them:
 
 ```
 // WIFI_LoRa_32 OLED ports
@@ -39,6 +48,9 @@ GPIO12 MAIN_LIGHTS 12
 #define DHTPIN 22 
 #define ERRPIN 23//error LED
 ```
+
+
+
 ## Operations
 The board will periodically send its status to a spring-boot server via WiFi, and download a list of commands to be executed.
 
