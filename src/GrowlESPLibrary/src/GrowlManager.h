@@ -7,8 +7,8 @@
 #include<iostream> 
 #include <queue>
 #include <deque>
-#include<array> // for array, at() 
-#include<tuple> // for get() 
+#include <array> // for array, at() 
+#include <tuple> // for get() 
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "arduino.h"

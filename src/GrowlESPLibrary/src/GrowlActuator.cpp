@@ -1,4 +1,6 @@
-#include "GrowlActuator.h"
+#include <GrowlDevice.h>
+#include <GrowlActuator.h>
+
 #define ARDUINOJSON_ENABLE_STD_STRING 1
 #include <ArduinoJson.hpp>
 #include <ArduinoJson.h>

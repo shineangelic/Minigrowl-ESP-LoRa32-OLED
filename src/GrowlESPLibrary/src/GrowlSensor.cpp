@@ -1,4 +1,5 @@
-#include "GrowlSensor.h"
+#include <GrowlDevice.h>
+#include <GrowlSensor.h>
 #include <iostream>
 #include <string>
 
@@ -19,14 +20,14 @@ GrowlSensor::GrowlSensor()
 
 std::string GrowlSensor::toJSON()
 {
- 
+
 	DynamicJsonDocument doc(600);
 
 	// Add values in the document
 	std::string t(1, _sensortype);
 	doc["typ"] = t;
 	doc["val"] = _reading;
-	doc["id"] =	_gpioid;
+	doc["id"] = _gpioid;
 	doc["err"] = _errorPresent;
 	doc["unt"] = _unit;
 

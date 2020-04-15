@@ -32,30 +32,14 @@ GrowlCommand::GrowlCommand(JsonVariant v)
 
 std::string  GrowlCommand::toJSONstr()
 {
-	// Allocate the JSON document
-	//
-	// Inside the brackets, 200 is the RAM allocated to this document.
-	// Don't forget to change this value to match your requirement.
-	// Use arduinojson.org/v6/assistant to compute the capacity.
-	DynamicJsonDocument doc(1000);
+
+	DynamicJsonDocument doc(500);
+	//StaticJsonDocument<400> doc;
 	// StaticJsonObject allocates memory on the stack, it can be
 	// replaced by DynamicJsonDocument which allocates in the heap.
 	//
 	// DynamicJsonDocument  doc(200);
-
-	// Add values in the document
-
-	doc["name"] = _name;
-	doc["val"] = _value;
-	doc["tgt"] = _targetId;
-	//if (isNaN(_queueId))
-	doc["idOnQueue"] = _queueId;
-
-	// Add an array.
-	//
-	/*JsonArray data = doc.createNestedArray("data");
-	data.add(48.756080);
-	data.add(2.302038);*/
+	doc = toJSON();
 
 	std::string s("");
 	serializeJson(doc, s);
@@ -65,24 +49,16 @@ std::string  GrowlCommand::toJSONstr()
 
 JsonObject  GrowlCommand::toJSON()
 {
-	// Allocate the JSON document
-	//
-	// Inside the brackets, 200 is the RAM allocated to this document.
-	// Don't forget to change this value to match your requirement.
-	// Use arduinojson.org/v6/assistant to compute the capacity.
+
+	//DynamicJsonDocument doc(500);
 	StaticJsonDocument<400> doc;
-
-	// StaticJsonObject allocates memory on the stack, it can be
-	// replaced by DynamicJsonDocument which allocates in the heap.
-	//
-	// DynamicJsonDocument  doc(200);
-
-	// Add values in the document
+	// TODO capire come mai dynamic resta vuoto
 
 	doc["name"] = _name;
 	doc["val"] = _value;
 	doc["tgt"] = _targetId;
-
+	if (_queueId != NULL)
+		doc["idOnQueue"] = _queueId;
 	// Add an array.
 	//
 	/*JsonArray data = doc.createNestedArray("data");

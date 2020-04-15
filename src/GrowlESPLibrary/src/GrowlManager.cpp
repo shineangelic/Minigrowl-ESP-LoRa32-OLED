@@ -11,8 +11,10 @@
 #define ARDUINOJSON_ENABLE_STD_STRING 1
 #include <ArduinoJson.hpp>
 #include <ArduinoJson.h>
-#include "GrowlManager.h"
-#include "GrowlCommand.h"
+#include <GrowlDevice.h>
+#include <GrowlSensor.h>
+#include <GrowlManager.h>
+#include <GrowlCommand.h>
 
 
 using namespace std;
@@ -29,18 +31,13 @@ void GrowlManager::initChamber()
 {
 	_pc = 0;
 	_chamber.init();
-	//_chamber.setLightSensorPin(LIGHT_SENSOR);
 
-	//_humiditySensor.setPid(_chamber.getHimiditySensorPin());
-	//_tempSensor.setPid(_chamber.getTempSensorPin());
-	//sendCurrentSensors();
 	_sensorsPtr.push_back(_chamber.getLightSensor());
 	_sensorsPtr.push_back(_chamber.getTemperatureSensor());
 	_sensorsPtr.push_back(_chamber.getHumiditySensor());
 	_sensorsPtr.push_back(_chamber.getBarometerSensor());
 	_sensorsPtr.push_back(_chamber.getExternalTemperatureSensor());
 	_sensorsPtr.push_back(_chamber.getExternalHumiditySensor());
-
 
 	_actuatorsPtr.push_back(_chamber.getIntakeFan());
 	_actuatorsPtr.push_back(_chamber.getOuttakeFan());
@@ -108,10 +105,9 @@ void GrowlManager::applyServerCommands()
 			if (value->getPid() == exec.getTargetActuatorId()) {
 				_commandsQueue.pop_front();
 				value->executeCommand(exec);
-				Serial.println("COMMAND EXEC, val=");
+				Serial.print("COMMAND EXEC, val=");
 				Serial.println(exec.getValueParameter());
 				bool removed = removeExecutedCommand(&exec);
-
 				break;
 			}
 
@@ -136,15 +132,13 @@ bool GrowlManager::removeExecutedCommand(GrowlCommand* executed) {
 	http.begin(completeUrl);
 	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
 	std::string s("");
-	//s = executed->toJSONstr();
-	//Serial.print(s.c_str());
 	int httpResponseCode = http.POST(s.c_str()); //Send the actual POST request
 
 	Serial.print("removeExecutedCommand() RESPONSE:");
 	Serial.println(httpResponseCode);
 	//Serial.println(_lightSensor.toJSON().c_str());
 	http.end();
-	return httpResponseCode == 200;
+	return (httpResponseCode == 200);
 }
 
 void GrowlManager::retrieveServerCommands()
@@ -172,17 +166,17 @@ void GrowlManager::retrieveServerCommands()
 
 		String payload = http.getString();
 		Serial.println(payload);
-		// compute the required size
-		const size_t CAPACITY = JSON_ARRAY_SIZE(3);
-
+		
 		// allocate the memory for the document
-		DynamicJsonDocument doc(2000);
+		DynamicJsonDocument doc(payload.length());
 
 		// parse a JSON array
 		DeserializationError err = deserializeJson(doc, payload);
 		if (err) {
 			Serial.print(F("deserializeJson() failed with code "));
 			Serial.println(err.c_str());
+			http.end();
+			return;
 		}
 
 		// extract the values
@@ -208,7 +202,6 @@ void GrowlManager::retrieveServerCommands()
 		Serial.print("Error on HTTP request: ");
 		Serial.println(httpResponseCode); 
 	}
-
 	http.end();
 }
 void GrowlManager::sendSensors()
