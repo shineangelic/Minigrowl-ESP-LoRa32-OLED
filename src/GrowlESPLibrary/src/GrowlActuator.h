@@ -13,13 +13,14 @@ public:
 	GrowlActuator() {
 		_supportedCommands.push_back(new GrowlCommand("Manual mode", -1));
 		_supportedCommands.push_back(new GrowlCommand("AUTO mode", -2));
+		_mode = MODE_AUTO;
 	};
 	std::string toJSON();
 	short getMode();
 	int executeCommand(GrowlCommand exec);
 protected:
 	std::string _name;
-	short _mode = MODE_AUTO;//manual or auto
+	short		_mode;//manual or auto
 	std::vector<GrowlCommand*> _supportedCommands;
 };
 
@@ -27,8 +28,8 @@ class MainLights : public GrowlActuator {
 public:
 	MainLights() : GrowlActuator() {
 		_name = "L";
-		_supportedCommands.push_back(new GrowlCommand("Switch lights ON", 1));
-		_supportedCommands.push_back(new GrowlCommand("Switch lights OFF", 0));
+		_supportedCommands.push_back(new GrowlCommand("Switch ON", 1));
+		_supportedCommands.push_back(new GrowlCommand("Switch OFF", 0));
 	};
 };
 
@@ -36,9 +37,9 @@ class OutTakeFan : public GrowlActuator {
 public:
 
 	OutTakeFan() : GrowlActuator() {
-		_name = "F";
-		_supportedCommands.push_back(new GrowlCommand("Turn ON Fan", 1));
-		_supportedCommands.push_back(new GrowlCommand("Turn OFF Fan", 0));
+		_name = "O";
+		_supportedCommands.push_back(new GrowlCommand("Turn ON", 1));
+		_supportedCommands.push_back(new GrowlCommand("Turn OFF", 0));
 	};
 };
 
@@ -47,8 +48,8 @@ public:
 
 	IntakeFan() : GrowlActuator() {
 		_name = "F";
-		_supportedCommands.push_back(new GrowlCommand("Turn ON intake Fan", 1));
-		_supportedCommands.push_back(new GrowlCommand("Turn Fan OFF", 0));
+		_supportedCommands.push_back(new GrowlCommand("Turn ON", 1));
+		_supportedCommands.push_back(new GrowlCommand("Turn OFF", 0));
 	};
 };
 

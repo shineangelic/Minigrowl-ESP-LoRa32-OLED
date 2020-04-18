@@ -129,7 +129,7 @@ bool GrowlChamber::initTemp() {
 	// Start task to get temperature
 	xTaskCreatePinnedToCore(
 		tempTask,                       /* Function to implement the task */
-		"tempTask ",                    /* Name of the task */
+		"growlTask",                    /* Name of the task */
 		4000,                           /* Stack size in words */
 		NULL,                           /* Task input parameter */
 		5,                              /* Priority of the task */
@@ -138,6 +138,7 @@ bool GrowlChamber::initTemp() {
 
 	if (tempTaskHandle == NULL) {
 		_humiditySensor.setHasError(true);
+		_tempSensor.setHasError(true);
 		Serial.println("Failed to start task for temperature update");
 		return false;
 	}

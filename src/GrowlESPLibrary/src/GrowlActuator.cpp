@@ -2,7 +2,6 @@
 #include <GrowlActuator.h>
 
 #define ARDUINOJSON_ENABLE_STD_STRING 1
-#include <ArduinoJson.hpp>
 #include <ArduinoJson.h>
 using namespace ARDUINOJSON_NAMESPACE;
 
@@ -22,24 +21,30 @@ std::string GrowlActuator::toJSON()
 
 	// Add values in the document
 	// 
-	doc["typ"] = _name;
-	doc["val"] = _reading;
-	doc["id"] = _gpioid;
-	doc["err"] = _errorPresent;
+	doc["typ"]	= _name;
+	doc["val"]	= _reading;
+	doc["id"]	= _gpioid;
+	doc["err"]	= _errorPresent;
 	doc["mode"] = _mode;
 
 	// array dei comandi supportati
-	JsonArray array = doc.createNestedArray("cmds");
+	JsonArray supportedCommandsJA = doc.createNestedArray("cmds");
 
 	std::vector<GrowlCommand*>::iterator iter, end;
-	for (iter = _supportedCommands.begin(), end = _supportedCommands.end(); iter != end; ++iter) {
-		//std::cout << (*iter)->display_card() << std::endl;
-		array.add((*iter)->toJSON());
+	/*for (iter = _supportedCommands.begin(), end = _supportedCommands.end(); iter != end; ++iter) {
+		JsonObject ret = supportedCommandsJA.createNestedObject();
+		(*iter)->toJSON(&ret);
+	}*/
+	for (auto const& value : _supportedCommands) {
+		JsonObject ret = supportedCommandsJA.createNestedObject();
+		value->toJSON(&ret);
 	}
 
 
 	std::string s("");
 	int p = serializeJson(doc, s);
+	//Serial.print("ACTUATOR SERIALIZED: ");
+	//Serial.println(s.c_str());
 
 	return s;
 }
@@ -52,8 +57,11 @@ short GrowlActuator::getMode()
 int GrowlActuator::executeCommand(GrowlCommand exec)
 {
 	if (exec.getTargetActuatorId() != this->getPid()) {
+		Serial.print("COMMAND EXECUTION ERROR PID MISMATCH WAS ");
+		Serial.print(exec.getTargetActuatorId());
+		Serial.print(" BUT EXPECTED ");
+		Serial.print(this->getPid());
 		return -1;
-		Serial.println("COMMAND EXECUTION ERROR PID MISMATCH");
 	}
 	if (exec.getValueParameter() == MODE_AUTO || exec.getValueParameter() == MODE_MANUAL) {
 		_mode = exec.getValueParameter();

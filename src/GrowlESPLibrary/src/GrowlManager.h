@@ -29,7 +29,6 @@ public:
 	GrowlManager() : _chamber() {};
 	void initChamber();
 	void loop();
-	//void retrieveTime();
 	std::string reportStatus();
 	std::tm	getGrowlManagerTime();
 	GrowlChamber getChamber();
@@ -45,8 +44,10 @@ private:
 	void applyServerCommands();
 	bool removeExecutedCommand(GrowlCommand* executed);
 	void retrieveServerCommands();
-	void sendSensors();
-	void sendActuators();
+	void sendRandomSensor();
+	void sendSensor(String completeUrl, GrowlSensor* toSend);
+	void sendActuator(const String completeUrl, GrowlActuator* toSend);
+	void sendRandomActuator();
 	void chamberLogic();
 	short _pc;//program counter
 	GrowlChamber	_chamber;

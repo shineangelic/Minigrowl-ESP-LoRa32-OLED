@@ -9,7 +9,6 @@
 #include <ostream>
 
 #define ARDUINOJSON_ENABLE_STD_STRING 1
-#include <ArduinoJson.hpp>
 #include <ArduinoJson.h>
 #include <GrowlDevice.h>
 #include <GrowlSensor.h>
@@ -19,12 +18,17 @@
 
 using namespace std;
 
+const char* CONTENT_TYPE_JSON = "application/json;charset=UTF-8";
 const char* host = "192.168.0.54";
 const int httpPort = 8080;
 const float hourSchedule[] = { 1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 
-//LightSensor		_lightSensor(LIGHT_SENSOR);
-//HumiditySensor  _humidity(DHTPIN);
+const int MAX_SLEEP = 15000;//15 seconds
+const int SLEEP_INCREMENT = 10;//100 cycles to increment a second
+
+//cit. Menzi va veloce ogni tanto
+int _sleepDelay = 500;
+
 
 //the pin has to be already set
 void GrowlManager::initChamber()
@@ -47,26 +51,41 @@ void GrowlManager::initChamber()
 
 void GrowlManager::loop()
 {
+	if (_pc == 0)//jump zero
+		_pc++;
+
 	_pc++;
- 
+
 	//schedules and conditions
 	chamberLogic();
 	//retrieves new commands
 	retrieveServerCommands();
 
-	delay(2000);
 	applyServerCommands();
 
 	//let the chamber do its readings
 	_chamber.loop();
-	delay(500);
+
+	sendRandomSensor();
+	delay(2000);
+	sendRandomActuator();
+	delay(2000);
 
 	//these are sent one per PC
-	sendSensors();
-	delay(2000);
-	sendActuators();
-	delay(2000);
+	/*if (_pc % 17 == 0) {
+		delay(500);
+		sendRandomActuator();
+	}
 
+	//send sensors a little faster
+	if (_pc % 13 == 0) {
+		delay(500);
+		sendRandomSensor();
+	}
+
+	Serial.print("WILL SLEEP ");
+	Serial.println(_sleepDelay);
+	delay(_sleepDelay);*/
 	//non va, per la storia UTC. Alla fine uso NTP
 	//retrieveTime();
 }
@@ -91,30 +110,46 @@ void GrowlManager::chamberLogic()
 	else {
 		_chamber.switchOuttakeFan(false);
 	}
-
 }
 
 
 void GrowlManager::applyServerCommands()
 {
+	Serial.print("QUEUE SIZE: ");
+	Serial.println(_commandsQueue.size());
+
 	if (!_commandsQueue.empty()) {
 		GrowlCommand exec = _commandsQueue.front();
 		//look for actuator
-		for (auto const& value : _actuatorsPtr) {
+		for (auto const& actuatorToSend : _actuatorsPtr) {
 			//Se trova, fa pop della coda e delete sul srv
-			if (value->getPid() == exec.getTargetActuatorId()) {
+			if (actuatorToSend->getPid() == exec.getTargetActuatorId()) {
 				_commandsQueue.pop_front();
-				value->executeCommand(exec);
-				Serial.print("COMMAND EXEC, val=");
-				Serial.println(exec.getValueParameter());
+				int ret = actuatorToSend->executeCommand(exec);
+				Serial.print("COMMAND EXEC, RETURN=");
+				Serial.println(ret);
 				bool removed = removeExecutedCommand(&exec);
+				delay(500);//let srv breath
+				try
+				{
+					String url = "/api/esp/v1/actuators/id/";
+					url += actuatorToSend->getPid();
+					String completeUrl = String("http://") + host + ":" + httpPort + url;
+					sendActuator(completeUrl, actuatorToSend);
+					delay(500);//let srv breath
+				}
+				catch (const std::exception& we)
+				{
+					Serial.print("ERRORE UPDATE SECCO");
+					Serial.println(we.what());
+				}
+
 				break;
 			}
 
 		}
 	}
-	Serial.print("QUEUE SIZE: ");
-	Serial.println(_commandsQueue.size());
+
 }
 
 bool GrowlManager::removeExecutedCommand(GrowlCommand* executed) {
@@ -130,7 +165,7 @@ bool GrowlManager::removeExecutedCommand(GrowlCommand* executed) {
 	Serial.println(completeUrl);
 
 	http.begin(completeUrl);
-	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
+	http.addHeader("Content-Type", CONTENT_TYPE_JSON); //Specify content-type header
 	std::string s("");
 	int httpResponseCode = http.POST(s.c_str()); //Send the actual POST request
 
@@ -159,16 +194,16 @@ void GrowlManager::retrieveServerCommands()
 	Serial.println(completeUrl);
 
 	http.begin(completeUrl); //Specify destination for HTTP request
-	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
+	http.addHeader("Content-Type", CONTENT_TYPE_JSON); //Specify content-type header
 	int httpResponseCode = http.GET();
-	 
+
 	if (httpResponseCode == 200) { //Check for the returning code
 
 		String payload = http.getString();
 		Serial.println(payload);
-		
+
 		// allocate the memory for the document
-		DynamicJsonDocument doc(payload.length());
+		DynamicJsonDocument doc(payload.length() + 100);
 
 		// parse a JSON array
 		DeserializationError err = deserializeJson(doc, payload);
@@ -198,26 +233,33 @@ void GrowlManager::retrieveServerCommands()
 				_commandsQueue.push_front(newC);
 			}
 		}
-	} else {
+	}else {
 		Serial.print("Error on HTTP request: ");
-		Serial.println(httpResponseCode); 
+		Serial.println(httpResponseCode);
 	}
 	http.end();
 }
-void GrowlManager::sendSensors()
+
+void GrowlManager::sendRandomSensor()
 {
-	WiFiClient client;
-	HTTPClient http;
-	const int httpPort = 8080;
-	if (!client.connect(host, httpPort)) {
-		Serial.println("sendSensors() connection failed");
-		return;
-	}
 	GrowlSensor* toSend = _sensorsPtr.at(_pc % _sensorsPtr.size());
 	// We now create a URI for the request
 	String url = "/api/esp/v1/sensors/id/";
 	url += toSend->getPid();
 	String completeUrl = String("http://") + host + ":" + httpPort + url;
+
+	sendSensor(completeUrl, toSend);
+}
+
+void GrowlManager::sendSensor(String completeUrl, GrowlSensor* toSend)
+{
+	WiFiClient client;
+	HTTPClient http;
+
+	if (!client.connect(host, httpPort)) {
+		Serial.println("sendSensors() connection FAIL");
+		return;
+	}
 
 	Serial.print("sendSensors(): ");
 	Serial.println(completeUrl);
@@ -235,34 +277,41 @@ void GrowlManager::sendSensors()
 	http.end();
 }
 
-void GrowlManager::sendActuators()
+
+void GrowlManager::sendRandomActuator()
+{
+	GrowlActuator* toSend = _actuatorsPtr.at(_pc % _actuatorsPtr.size());
+	String url = "/api/esp/v1/actuators/id/";
+	url += toSend->getPid();
+	String completeUrl = String("http://") + host + ":" + httpPort + url;
+	sendActuator(completeUrl, toSend);
+}
+
+void GrowlManager::sendActuator(const String completeUrl, GrowlActuator* toSend)
 {
 	WiFiClient client;
 	HTTPClient http;
-	GrowlActuator* toSend = _actuatorsPtr.at(_pc % _actuatorsPtr.size());
 
-	String url = "/api/esp/v1/actuators/id/";
-	url += toSend->getPid();
+	if (!client.connect(host, httpPort)) {
+		Serial.println("sendActuators() connection FAIL");
+		return;
+	}
 
 	Serial.print("Send actuator: ");
-	Serial.println(url);
-
+	Serial.println(completeUrl);
+	
+	const std::string vray = toSend->toJSON();
 	Serial.print("HTTP REQ:");
-	try {
-		Serial.println(toSend->toJSON().c_str());
-		http.begin(String("http://") + host + ":" + httpPort + url); //Specify destination for HTTP request
-		http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
-		int httpResponseCode = http.PUT(toSend->toJSON().c_str()); //Send the actual POST request
+	Serial.println(vray.c_str());
+	http.begin(completeUrl); //Specify destination for HTTP request
+	http.addHeader("Content-Type", CONTENT_TYPE_JSON); //Specify content-type header
+	int httpResponseCode = http.PUT(vray.c_str()); //Send the actual POST request
 
-		Serial.print("HTTP RESPONSE:");
-		Serial.println(httpResponseCode);
-		http.end();
-	}
-	catch (int e) {
-		Serial.print("ERRORE GATTICO An exception occurred. Exception Nr. " + e);
-	}
+	Serial.print("HTTP RESPONSE:");
+	Serial.println(httpResponseCode);
+	http.end();
+
 }
-
 
 
 
@@ -291,8 +340,9 @@ std::string GrowlManager::reportStatus()
 	ss << " Temp: ";
 	ss << (std::ceil(this->getChamber().getTemperatureSensor()->getReading() * 10) / 10) << "°C";
 	ss << "\n";
-	ss << "Lumen: ";
-	ss << this->getChamber().getLumen() << "lux";
+	ss << this->getChamber().getLumen() << "LUX   ";
+	ss << " T.ext: ";
+	ss << (std::ceil(this->getChamber().getExternalTemperatureSensor()->getReading() * 10) / 10) << "°C";
 	ss << "\n";
 	ss << chTime;
 	//std::string s(ss.str());

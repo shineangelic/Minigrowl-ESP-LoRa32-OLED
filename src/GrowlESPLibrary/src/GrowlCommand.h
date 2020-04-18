@@ -10,7 +10,7 @@ public:
 	GrowlCommand(std::string name,int value,int targetPid, int queueId);
 	GrowlCommand(JsonVariant in);
 	std::string toJSONstr();
-	JsonObject toJSON();
+	void toJSON(JsonObject* doc);
 	
 	int getTargetActuatorId();
 	int getValueParameter();

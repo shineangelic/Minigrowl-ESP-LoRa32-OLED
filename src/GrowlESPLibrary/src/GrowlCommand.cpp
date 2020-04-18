@@ -1,7 +1,6 @@
 #include "GrowlCommand.h"
 
 #define ARDUINOJSON_ENABLE_STD_STRING 1
-#include <ArduinoJson.hpp>
 #include <ArduinoJson.h>
 using namespace ARDUINOJSON_NAMESPACE;
 
@@ -9,6 +8,8 @@ GrowlCommand::GrowlCommand(std::string name, int value)
 {
 	_name = name;
 	_value = value;
+	_targetId = -1;
+	_queueId = -1;
 }
 
 GrowlCommand::GrowlCommand(std::string name, int value, int targetPid, int queueId)
@@ -34,41 +35,28 @@ std::string  GrowlCommand::toJSONstr()
 {
 
 	DynamicJsonDocument doc(500);
-	//StaticJsonDocument<400> doc;
-	// StaticJsonObject allocates memory on the stack, it can be
-	// replaced by DynamicJsonDocument which allocates in the heap.
-	//
-	// DynamicJsonDocument  doc(200);
-	doc = toJSON();
+
+	JsonObject ret = doc.createNestedObject();
+	 toJSON(&ret);
 
 	std::string s("");
 	serializeJson(doc, s);
 	return s;
 }
 
-
-JsonObject  GrowlCommand::toJSON()
+//the json doc container must exists
+void  GrowlCommand::toJSON(JsonObject* docref)
 {
-
-	//DynamicJsonDocument doc(500);
-	StaticJsonDocument<400> doc;
-	// TODO capire come mai dynamic resta vuoto
-
+	JsonObject doc = *docref;//ref al padre
+	
 	doc["name"] = _name;
 	doc["val"] = _value;
-	doc["tgt"] = _targetId;
-	if (_queueId != NULL)
-		doc["idOnQueue"] = _queueId;
-	// Add an array.
-	//
-	/*JsonArray data = doc.createNestedArray("data");
-	data.add(48.756080);
-	data.add(2.302038);*/
-
-	/*std::string s("");
-	serializeJson(doc, s);*/
-	JsonObject ret = doc.to<JsonObject>();
-	return ret;
+	if (_targetId != -1) {
+		doc["tgt"] = _targetId;
+	}
+	if (_queueId != -1) {
+	doc["idOnQueue"] = _queueId;
+	}
 }
 
 int GrowlCommand::getTargetActuatorId()
