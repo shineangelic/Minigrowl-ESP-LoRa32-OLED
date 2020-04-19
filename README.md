@@ -1,5 +1,5 @@
 # Minigrowl-ESP-LoRa32-OLED
-minimal firmware w/ JSON test processing to drive a growroom. The project is made of three part, this is the device driver. It is designed to operate a main light at predetermined time and take some specific actions if air is too dry and/or hot. It reports sensors state to a spring server and download a list of commands to be executed. Please see [Microgrowl-spring README](https://shineangelic.github.io/Minigrowl-spring/) for general concepts and [https://github.com/shineangelic/Minigrowl-react] for an example client.
+minimal firmware w/ JSON test processing to drive a growroom. The project is made of three part, this is the device driver. It is designed to operate a main light at predetermined time and take some specific actions if air is too dry and/or hot. It reports sensors state to a spring server and download a list of commands to be executed. Please see [Microgrowl-spring](https://shineangelic.github.io/Minigrowl-spring/) for general concepts and [Microgrowl-react](https://github.com/shineangelic/Minigrowl-react) for a working client example.
 
 It works looping over chamber logic, sensors readings and JSON communications with a server (optional, for now), thanks to [Arduino JSON](https://arduinojson.org/). A sketch is provided as an example of how I am configuring my own device.
 
