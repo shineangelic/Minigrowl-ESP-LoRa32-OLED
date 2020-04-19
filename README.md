@@ -64,9 +64,18 @@ This is the class representing real hardware. It `has-a` pointer to devices and 
 
 ### GrowlManager.cpp
 
-Main ESP32 software controller. It `has-a` chamber and communicates via JSON to exchange devices.
+Main ESP32 software controller. It `has-a` chamber and communicates via JSON to exchange devices and control them. Implements a basic _lifecycle loop_, trying to keep values inside a preferred range:
+
+  * The out-take `Fan` will be switched on when internal temperature exceeds 29 degrees, and shut-off above 27
+  * The `MainLights` switch is temporized for a 20/4 daily cycle. Anothe timetable is predefined for flowering phase
 
 ![dev HW](docs/hw2.jpg)
+
+## Used libraries
+
+ * https://github.com/beegee-tokyo/DHTesp
+ * https://arduinojson.org/
+ * https://github.com/adafruit/Adafruit_BME280_Library
 
 ## warning
 please note that is an amateur past-time work. Do not use it in professional environments
