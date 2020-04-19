@@ -11,8 +11,9 @@ uses beegee-tokyo DHT lib
 represents a grow chamber, with two temperature&hum sensors and 4 commandable devices,
 here named lights, outFan and inFan and Heater
 */
+
 #define TIMER_INTERVAL_SECONDS 20
-#define BME280_INTERVAL_MSEC 100000
+#define BME280_INTERVAL_MSEC 60000
 #define EXT_OFFSET 32
 
 /** Task handle to retrieve sensors value */

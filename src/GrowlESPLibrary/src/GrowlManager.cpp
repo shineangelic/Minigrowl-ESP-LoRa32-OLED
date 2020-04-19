@@ -14,20 +14,20 @@
 #include <GrowlSensor.h>
 #include <GrowlManager.h>
 #include <GrowlCommand.h>
-
-
+ 
 using namespace std;
 
-const char* CONTENT_TYPE_JSON = "application/json;charset=UTF-8";
+const char* CONTENT_TYPE_JSON_UTF8 = "application/json;charset=UTF-8";
 const char* host = "192.168.0.54";
-const int httpPort = 8080;
+const int httpPort = 8000;
 const float hourSchedule[] = { 1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+const int BASE_SLEEP = 250;
 
-const int MAX_SLEEP = 15000;//15 seconds
+const int MAX_SLEEP = 10000;//15 seconds
 const int SLEEP_INCREMENT = 10;//100 cycles to increment a second
 
 //cit. Menzi va veloce ogni tanto
-int _sleepDelay = 500;
+int _sleepDelay = BASE_SLEEP;
 
 
 //the pin has to be already set
@@ -61,33 +61,46 @@ void GrowlManager::loop()
 	//retrieves new commands
 	retrieveServerCommands();
 
+	calcDelay();
+
+
 	applyServerCommands();
 
 	//let the chamber do its readings
 	_chamber.loop();
 
-	sendRandomSensor();
+	/*sendRandomSensor();
 	delay(2000);
 	sendRandomActuator();
-	delay(2000);
+	delay(2000);*/
 
 	//these are sent one per PC
-	/*if (_pc % 17 == 0) {
-		delay(500);
+	if (_pc % 17 == 0) {
 		sendRandomActuator();
+		delay(250);
 	}
 
 	//send sensors a little faster
 	if (_pc % 13 == 0) {
-		delay(500);
 		sendRandomSensor();
+		delay(250);
 	}
 
 	Serial.print("WILL SLEEP ");
 	Serial.println(_sleepDelay);
-	delay(_sleepDelay);*/
+	delay(_sleepDelay);
 	//non va, per la storia UTC. Alla fine uso NTP
 	//retrieveTime();
+}
+
+void GrowlManager::calcDelay() {
+	if (!_commandsQueue.empty()) {
+		_sleepDelay = BASE_SLEEP;
+	}
+
+	if (_sleepDelay < MAX_SLEEP)
+		_sleepDelay += SLEEP_INCREMENT;
+
 }
 
 void GrowlManager::chamberLogic()
@@ -102,6 +115,8 @@ void GrowlManager::chamberLogic()
 	//mainlights schedule
 	if (_chamber.getMainLights()->getMode() == MODE_AUTO)
 		_chamber.switchMainLights(hourSchedule[now.tm_hour]);
+	else
+		Serial.println("MANUAL LIGHTS");
 	//_mainLights.setReading(hourSchedule[now.tm_hour]);
 	//heat out take
 	if (_chamber.getTemperatureSensor()->getReading() > 29) {

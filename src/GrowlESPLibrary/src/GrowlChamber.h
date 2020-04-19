@@ -11,6 +11,9 @@
 
 #include <GrowlSensor.h>
 #include <GrowlActuator.h>
+/* A chamber represents a grow chamber, with two temperature&hum sensors and 4 commandable devices,
+here named lights, outFan and inFan and Heater */
+
 
 class GrowlChamber
 {
@@ -38,8 +41,6 @@ public:
 	IntakeFan* getIntakeFan();
 	OutTakeFan* getOuttakeFan();
 	Hvac* getHeater();
-	//float getTemperature();
-	//float getHumidity();
 	float getPressure();
 	int getLumen();//NOT real Lumen!
 	BaromenterSensor* getBarometerSensor();

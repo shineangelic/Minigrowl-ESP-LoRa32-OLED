@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <time.h>
-#include<iostream> 
+#include <iostream> 
 #include <queue>
 #include <deque>
 #include <array> // for array, at() 
@@ -21,7 +21,7 @@
 #include <ctime>
 #include <GrowlChamber.h>
 
-using namespace std;
+
 
 class GrowlManager
 {
@@ -29,6 +29,7 @@ public:
 	GrowlManager() : _chamber() {};
 	void initChamber();
 	void loop();
+	void calcDelay();
 	std::string reportStatus();
 	std::tm	getGrowlManagerTime();
 	GrowlChamber getChamber();
