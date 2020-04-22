@@ -59,5 +59,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlDevice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\Private.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -280,7 +280,7 @@ bool GrowlChamber::getHeatingStatus()
 	return _hvac.getReading() > 0;
 }
 
-bool GrowlChamber::switchMainLights(bool on)
+bool GrowlChamber::switchMainLights(int on)
 {
 	_mainLights.setReading(on ? 1 : 0);
 	digitalWrite(_mainLights.getPid(), _mainLights.getReading());

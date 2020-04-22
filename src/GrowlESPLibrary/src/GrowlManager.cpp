@@ -12,15 +12,15 @@
 #include <ArduinoJson.h>
 #include <GrowlDevice.h>
 #include <GrowlSensor.h>
+#include <GrowlActuator.h>
 #include <GrowlManager.h>
 #include <GrowlCommand.h>
  
 using namespace std;
 
 const char* CONTENT_TYPE_JSON_UTF8 = "application/json;charset=UTF-8";
-const char* host = "192.168.0.54";
-const int httpPort = 8000;
-const float hourSchedule[] = { 1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+
+const int hourSchedule[] = { 1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 const int BASE_SLEEP = 250;
 
 const int MAX_SLEEP = 10000;//15 seconds
@@ -31,8 +31,10 @@ int _sleepDelay = BASE_SLEEP;
 
 
 //the pin has to be already set
-void GrowlManager::initChamber()
+void GrowlManager::initChamber(const char* serverhost, const int serverport)
 {
+	_host = serverhost;
+	_httpPort = serverport;
 	_pc = 0;
 	_chamber.init();
 
@@ -75,13 +77,13 @@ void GrowlManager::loop()
 	delay(2000);*/
 
 	//these are sent one per PC
-	if (_pc % 17 == 0) {
+	if (_pc % 11 == 0) {
 		sendRandomActuator();
 		delay(250);
 	}
 
 	//send sensors a little faster
-	if (_pc % 13 == 0) {
+	if (_pc % 7 == 0) {
 		sendRandomSensor();
 		delay(250);
 	}
@@ -105,25 +107,35 @@ void GrowlManager::calcDelay() {
 
 void GrowlManager::chamberLogic()
 {
-	//_chamber.switchHeater(true);
-	//_chamber.switchMainLights(true);
 
 	//LIFECYCLE
 	struct tm now;
 	getLocalTime(&now, 0);
-
+	Serial.print("LOCAL HOUR: ");
+	Serial.print(now.tm_hour);
+	Serial.print(" SCHED: ");
+	Serial.print(hourSchedule[now.tm_hour]);
+	Serial.print(" CUR: ");
+	Serial.println(_chamber.getMainLights()->getReading());
 	//mainlights schedule
-	if (_chamber.getMainLights()->getMode() == MODE_AUTO)
-		_chamber.switchMainLights(hourSchedule[now.tm_hour]);
+	if (_chamber.getMainLights()->getMode() == MODE_AUTO) {
+		if (hourSchedule[now.tm_hour] != _chamber.getMainLights()->getReading()) {
+			Serial.print("AUTO LIGHTS SWITCH: ");
+			Serial.println(hourSchedule[now.tm_hour]);
+			_chamber.switchMainLights(hourSchedule[now.tm_hour]);
+		}
+	}
 	else
 		Serial.println("MANUAL LIGHTS");
 	//_mainLights.setReading(hourSchedule[now.tm_hour]);
 	//heat out take
-	if (_chamber.getTemperatureSensor()->getReading() > 29) {
-		_chamber.switchOuttakeFan(true);
-	}
-	else {
-		_chamber.switchOuttakeFan(false);
+	if (_chamber.getOuttakeFan()->getMode() == MODE_AUTO) {
+		if (_chamber.getTemperatureSensor()->getReading() > 29) {
+			_chamber.switchOuttakeFan(true);
+		}
+		else if (_chamber.getTemperatureSensor()->getReading() < 27) {
+			_chamber.switchOuttakeFan(false);
+		}
 	}
 }
 
@@ -149,7 +161,7 @@ void GrowlManager::applyServerCommands()
 				{
 					String url = "/api/esp/v1/actuators/id/";
 					url += actuatorToSend->getPid();
-					String completeUrl = String("http://") + host + ":" + httpPort + url;
+					String completeUrl = String("") + _host + ":" + _httpPort + url;
 					sendActuator(completeUrl, actuatorToSend);
 					delay(500);//let srv breath
 				}
@@ -175,12 +187,12 @@ bool GrowlManager::removeExecutedCommand(GrowlCommand* executed) {
 	// We now create a URI for the request
 	String url = "/api/esp/v1/commands/id/";
 	url += executed->getQueueId();
-	String completeUrl = String("http://") + host + ":" + httpPort + url;
+	String completeUrl = String("") + _host + ":" + _httpPort + url;
 	Serial.print("removeExecutedCommand() url: ");
 	Serial.println(completeUrl);
 
 	http.begin(completeUrl);
-	http.addHeader("Content-Type", CONTENT_TYPE_JSON); //Specify content-type header
+	http.addHeader("Content-Type", CONTENT_TYPE_JSON_UTF8); //Specify content-type header
 	std::string s("");
 	int httpResponseCode = http.POST(s.c_str()); //Send the actual POST request
 
@@ -196,20 +208,20 @@ void GrowlManager::retrieveServerCommands()
 	WiFiClient client;
 	HTTPClient http;
 
-	if (!client.connect(host, httpPort)) {
+	if (!client.connect(_host, _httpPort)) {
 		Serial.println("retrieveServerCommands() connection failed");
 		return;
 	}
 
 	// We now create a URI for the request
 	String urlPath = "/api/esp/v1/commands/";
-	String completeUrl = String("http://") + host + ":" + httpPort + urlPath;
+	String completeUrl = String("") + _host + ":" + _httpPort + urlPath;
 
 	Serial.print("retrieveServerCommands: ");
 	Serial.println(completeUrl);
 
 	http.begin(completeUrl); //Specify destination for HTTP request
-	http.addHeader("Content-Type", CONTENT_TYPE_JSON); //Specify content-type header
+	http.addHeader("Content-Type", CONTENT_TYPE_JSON_UTF8); //Specify content-type header
 	int httpResponseCode = http.GET();
 
 	if (httpResponseCode == 200) { //Check for the returning code
@@ -261,7 +273,7 @@ void GrowlManager::sendRandomSensor()
 	// We now create a URI for the request
 	String url = "/api/esp/v1/sensors/id/";
 	url += toSend->getPid();
-	String completeUrl = String("http://") + host + ":" + httpPort + url;
+	String completeUrl = String("") + _host + ":" + _httpPort + url;
 
 	sendSensor(completeUrl, toSend);
 }
@@ -271,7 +283,7 @@ void GrowlManager::sendSensor(String completeUrl, GrowlSensor* toSend)
 	WiFiClient client;
 	HTTPClient http;
 
-	if (!client.connect(host, httpPort)) {
+	if (!client.connect(_host, _httpPort)) {
 		Serial.println("sendSensors() connection FAIL");
 		return;
 	}
@@ -280,11 +292,12 @@ void GrowlManager::sendSensor(String completeUrl, GrowlSensor* toSend)
 	Serial.println(completeUrl);
 
 	Serial.print("HTTP REQ:");
-	Serial.println(toSend->toJSON().c_str());
+	const std::string vray = toSend->toJSON();
+	Serial.println(vray.c_str());
 
 	http.begin(completeUrl); //Specify destination for HTTP request
-	http.addHeader("Content-Type", "application/json;charset=UTF-8"); //Specify content-type header
-	int httpResponseCode = http.PUT(toSend->toJSON().c_str()); //Send the actual POST request
+	http.addHeader("Content-Type", CONTENT_TYPE_JSON_UTF8); //Specify content-type header
+	int httpResponseCode = http.PUT(vray.c_str()); //Send the actual POST request
 
 	Serial.print("sendSensors() HTTP RESPONSE:");
 	Serial.println(httpResponseCode);
@@ -298,7 +311,7 @@ void GrowlManager::sendRandomActuator()
 	GrowlActuator* toSend = _actuatorsPtr.at(_pc % _actuatorsPtr.size());
 	String url = "/api/esp/v1/actuators/id/";
 	url += toSend->getPid();
-	String completeUrl = String("http://") + host + ":" + httpPort + url;
+	String completeUrl = String("") + _host + ":" + _httpPort + url;
 	sendActuator(completeUrl, toSend);
 }
 
@@ -307,7 +320,7 @@ void GrowlManager::sendActuator(const String completeUrl, GrowlActuator* toSend)
 	WiFiClient client;
 	HTTPClient http;
 
-	if (!client.connect(host, httpPort)) {
+	if (!client.connect(_host, _httpPort)) {
 		Serial.println("sendActuators() connection FAIL");
 		return;
 	}
@@ -319,7 +332,7 @@ void GrowlManager::sendActuator(const String completeUrl, GrowlActuator* toSend)
 	Serial.print("HTTP REQ:");
 	Serial.println(vray.c_str());
 	http.begin(completeUrl); //Specify destination for HTTP request
-	http.addHeader("Content-Type", CONTENT_TYPE_JSON); //Specify content-type header
+	http.addHeader("Content-Type", CONTENT_TYPE_JSON_UTF8); //Specify content-type header
 	int httpResponseCode = http.PUT(vray.c_str()); //Send the actual POST request
 
 	Serial.print("HTTP RESPONSE:");

@@ -19,13 +19,13 @@ class GrowlChamber
 {
 
 public:
-	GrowlChamber() {};
+	GrowlChamber(){};
 	void init();
 	void loop();
 	bool getMainLightsStatus();
 	bool getIntakeFanStatus();
 	bool getHeatingStatus();
-	bool switchMainLights(bool on);
+	bool switchMainLights(int on);
 	bool switchIntakeFan(bool on);
 	bool switchOuttakeFan(bool on);
 	bool switchHeater(bool on);
@@ -37,18 +37,18 @@ public:
 	void setDhtPin(int HWPIN);
 	void setBME280Pin(int SCLPIN, int SDAPIN);
 	bool hasErrors();
-	MainLights* getMainLights();
-	IntakeFan* getIntakeFan();
-	OutTakeFan* getOuttakeFan();
-	Hvac* getHeater();
-	float getPressure();
-	int getLumen();//NOT real Lumen!
-	BaromenterSensor* getBarometerSensor();
-	TemperatureSensor* getTemperatureSensor();
-	HumiditySensor* getHumiditySensor();
-	TemperatureSensor* getExternalTemperatureSensor();
-	HumiditySensor* getExternalHumiditySensor();
-	LightSensor* getLightSensor();
+	MainLights*		getMainLights();
+	IntakeFan*		getIntakeFan();
+	OutTakeFan*		getOuttakeFan();
+	Hvac*			getHeater();
+	float			getPressure();
+	int				getLumen();//NOT real Lumen!
+	BaromenterSensor*	getBarometerSensor();
+	TemperatureSensor*	getTemperatureSensor();
+	HumiditySensor*		getHumiditySensor();
+	TemperatureSensor*	getExternalTemperatureSensor();
+	HumiditySensor*		getExternalHumiditySensor();
+	LightSensor*		getLightSensor();
 private:
 	
 	bool initTemp();

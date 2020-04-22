@@ -1,4 +1,3 @@
-// 
 /*
 
 Minigrowl main sketch. It will create a GrowlManager object and cycle thru its loop.
@@ -16,16 +15,22 @@ Author:     CRONER\Ale
 #include "SSD1306.h"
 #include <WiFi.h>
 #include "time.h"
-#include <GrowlManager.h> 
+#include <GrowlManager.h>
 
 
-/* Sketch to demonstrate basic SI odel functionality
+#include <Private.h>
+//UNCOMMENT and use yours
+//const char* host = "https://yourhost";
+//const int httpPort = 443;
+
+//const char* ssid = "yourSSID";
+//const char* password = "yourWifiPass";
+
+
+/* 
 
 Connections
 ===========
-Connect 13 to TX of SI UART
-Connect 15 to RX of SI UART
-
 //OLED pins to ESP32 GPIOs via this connecthin:
 //OLED_SDA -- GPIO4
 //OLED_SCL -- GPIO15
@@ -55,28 +60,22 @@ Connect 15 to RX of SI UART
 //grow room service coordinator
 GrowlManager gm = GrowlManager();
 
+//oled display, can be easily removed
 SSD1306  display(0x3c, 4, 15);
-//WIFI
-const char* ssid = "Cisco66778";
-const char* password = "cimadaconegliano";
 
 const char* ntpServer = "europe.pool.ntp.org";
 const long  gmtOffset_sec = 3600;
 const int   daylightOffset_sec = 3600;
 
-//const char* host = "192.168.0.54";
-short pc;
-
 /**************************************************************************/
 /*
-Arduino setup function (automatically called at startup)
+Initialize the growchamber and setup devices PINs
 */
 /**************************************************************************/
 void setup(void)
 {
 	Serial.begin(57600);
- 
-	//CONFIGURE DEVICES PIN
+
 	pinMode(MAIN_LIGHTS, OUTPUT);
 	gm.initMainLights(MAIN_LIGHTS);
 
@@ -94,23 +93,23 @@ void setup(void)
 
 	gm.setDhtPin(DHTPIN);
 	pinMode(DHTPIN, INPUT);
-	 
+
 	gm.setBME280Pin(SCL, SDA);
 
 	pinMode(ERRPIN, OUTPUT);
 
 	//call chamber delegate AFTER having set PINs
-	gm.initChamber();
+	gm.initChamber(host, httpPort);
 	delay(1000);//wait DHT
 
 	//OLED
 	pinMode(OLED, OUTPUT);
-	digitalWrite(OLED, LOW);    // set GPIO16 low to reset OLED
+	digitalWrite(OLED, LOW);// set GPIO16 low to reset OLED
 	delay(50);
 	digitalWrite(OLED, HIGH); // while OLED is running, must set GPIO16 in high
 	display.init();
 	display.setLogBuffer(5, 30);
-	 
+
 
 	WiFi.begin(ssid, password);
 
@@ -127,9 +126,6 @@ void setup(void)
 	// Init and get the time
 	configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 	printLocalTime();
-
-
-	pc = 1;//program counter
 }
 
 void printLocalTime() {
@@ -149,10 +145,9 @@ void printLocalTime() {
 void loop(void)
 {
 	gm.loop();
-	
-	Serial.print("Free Heap: ");
-	Serial.println(ESP.getFreeHeap());
-	 
+
+	//Serial.print("Free Heap: ");
+	//Serial.println(ESP.getFreeHeap());
 
 	/*OLED Report*/
 	drawText();
@@ -172,7 +167,6 @@ void drawText() {
 	display.setTextAlignment(TEXT_ALIGN_LEFT);
 	display.drawString(0, 0, gm.reportStatus().c_str());
 
-	//drawPowerProgressBar();
 	display.display();
 	display.clear();
 }

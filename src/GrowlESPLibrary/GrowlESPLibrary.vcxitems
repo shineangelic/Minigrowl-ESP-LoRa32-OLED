@@ -26,6 +26,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlChamber.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlSensor.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\Private.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlActuator.cpp" />
