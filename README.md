@@ -7,15 +7,17 @@ The project implements in C++ a similar entity structure found at upper level of
 
 # Required Hardware
 
-![dev OLED](/docs/oledTest.jpg)
 
 * ESP32 board with OLED (optional, actually)
 * DHT22 temperature sensor (optional, used for external room temp)
 * BME280 main chamber pressure, temperature and humidity sensor
+* a photoresistor
 * 4 relay board, to operate devices 
 
-the sketch is made to compile on a ESP32 WiFi LoRa device, but should be easily compiled on other ESP32 devices.
-Here is an example PIN usage. You will need a DHT22 (temperature sensor) and BMS280 (temperature) to run the code as-is.
+![dev OLED](/docs/oledTest.jpg)
+
+the `minigrowl.ino` sketch is made to compile on a ESP32 WiFi LoRa device, but should be easily compiled on other ESP32 devices.
+Here is an example PIN usage. You will need a DHT22 (temperature sensor), a photoresistor and BMS280 (temperature) to run the code as-is.
 
 This is how I set them:
 
@@ -24,7 +26,6 @@ This is how I set them:
 //OLED_SDA -- GPIO4
 //OLED_SCL -- GPIO15
 //OLED_RST -- GPIO16
-
 
 // WIFI_LoRa_32 ports
 GPIO5  -- SX1278's SCK
@@ -50,9 +51,8 @@ GPIO12 MAIN_LIGHTS 12
 ```
 
 
-
 ## Operations
-The board will periodically send its status to a spring-boot server via WiFi, and download a list of commands to be executed.
+The board will periodically send its status to a spring-boot server via WiFi, and download a list of commands to be executed. Both sensors and actuators are sent periodically, with a decreasing interval until `MAX_SLEEP` time. Intervals can be set in 
 
 ### NTP
 
