@@ -50,6 +50,7 @@ private:
 	void sendRandomActuator();
 	void chamberLogic();
 	short _pc;//program counter
+	short _sburtoMode;
 	GrowlChamber	_chamber;
 	std::vector<GrowlSensor*>	_sensorsPtr;
 	std::vector<GrowlActuator*> _actuatorsPtr;

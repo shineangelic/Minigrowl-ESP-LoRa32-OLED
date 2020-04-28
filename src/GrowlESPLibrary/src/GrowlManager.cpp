@@ -77,13 +77,13 @@ void GrowlManager::loop()
 	delay(2000);*/
 
 	//these are sent one per PC
-	if (_pc % 11 == 0) {
+	if (_pc % 11 == 0 || _sburtoMode > 0) {
 		sendRandomActuator();
 		delay(200);
 	}
 
 	//send sensors a little faster
-	if (_pc % 7 == 0) {
+	if (_pc % 7 == 0 || _sburtoMode > 0) {
 		sendRandomSensor();
 		delay(200);
 	}
@@ -96,12 +96,15 @@ void GrowlManager::loop()
 }
 
 void GrowlManager::calcDelay() {
-	if (!_commandsQueue.empty()) {
+	if (!_commandsQueue.empty() || _sburtoMode > 0) {
 		_sleepDelay = BASE_SLEEP;
 	}
 
 	if (_sleepDelay < MAX_SLEEP)
 		_sleepDelay += SLEEP_INCREMENT;
+
+	if (_sburtoMode > 0)
+		_sburtoMode--;
 
 }
 
@@ -112,11 +115,11 @@ void GrowlManager::chamberLogic()
 	struct tm now;
 	getLocalTime(&now, 0);
 	Serial.print("LOCAL HOUR: ");
-	Serial.print(now.tm_hour);
-	Serial.print(" SCHED: ");
+	Serial.println(now.tm_hour);
+	/*Serial.print(" SCHED: ");
 	Serial.print(hourSchedule[now.tm_hour]);
 	Serial.print(" CUR: ");
-	Serial.println(_chamber.getMainLights()->getReading());
+	Serial.println(_chamber.getMainLights()->getReading());*/
 	//mainlights schedule
 	if (_chamber.getMainLights()->getMode() == MODE_AUTO) {
 		if (hourSchedule[now.tm_hour] != _chamber.getMainLights()->getReading()) {
@@ -147,6 +150,15 @@ void GrowlManager::applyServerCommands()
 
 	if (!_commandsQueue.empty()) {
 		GrowlCommand exec = _commandsQueue.front();
+		//check for meta commands
+		if (exec.getValueParameter() == CMD_FULLREFRESH && exec.getTargetActuatorId() == -1) {
+			//simple refresh, sburto mode
+			Serial.print("SBURTOMODE=");
+			_sburtoMode = 5;
+			_commandsQueue.pop_front();
+			bool removed = removeExecutedCommand(&exec);
+		}
+
 		//look for actuator
 		for (auto const& actuatorToSend : _actuatorsPtr) {
 			//Se trova, fa pop della coda e delete sul srv
@@ -156,7 +168,9 @@ void GrowlManager::applyServerCommands()
 				Serial.print("COMMAND EXEC, RETURN=");
 				Serial.println(ret);
 				bool removed = removeExecutedCommand(&exec);
-				delay(500);//let srv breath
+				 
+				delay(250);
+				//let srv breath
 				try
 				{
 					String url = "/api/esp/v1/actuators/id/";
@@ -169,8 +183,7 @@ void GrowlManager::applyServerCommands()
 				{
 					Serial.print("ERRORE UPDATE SECCO");
 					Serial.println(we.what());
-				}
-
+				} 
 				break;
 			}
 
