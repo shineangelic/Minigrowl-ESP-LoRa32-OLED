@@ -31,7 +31,6 @@ public:
 	void loop();
 	void calcDelay();
 	std::string reportStatus();
-	std::tm	getGrowlManagerTime();
 	GrowlChamber getChamber();
 	void initMainLights(int HWPIN);
 	void initIntakeFan(int HWPIN);

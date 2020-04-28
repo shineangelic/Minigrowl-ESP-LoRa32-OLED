@@ -79,13 +79,13 @@ void GrowlManager::loop()
 	//these are sent one per PC
 	if (_pc % 11 == 0) {
 		sendRandomActuator();
-		delay(250);
+		delay(200);
 	}
 
 	//send sensors a little faster
 	if (_pc % 7 == 0) {
 		sendRandomSensor();
-		delay(250);
+		delay(200);
 	}
 
 	Serial.print("WILL SLEEP ");
@@ -377,10 +377,6 @@ std::string GrowlManager::reportStatus()
 	return ss.str();
 }
 
-std::tm GrowlManager::getGrowlManagerTime() {
-	std::tm t = {};
-	return t;
-}
 
 GrowlChamber GrowlManager::getChamber()
 {

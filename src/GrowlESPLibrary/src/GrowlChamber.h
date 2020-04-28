@@ -21,10 +21,7 @@ class GrowlChamber
 public:
 	GrowlChamber(){};
 	void init();
-	void loop();
-	bool getMainLightsStatus();
-	bool getIntakeFanStatus();
-	bool getHeatingStatus();
+	void loop(); 
 	bool switchMainLights(int on);
 	bool switchIntakeFan(bool on);
 	bool switchOuttakeFan(bool on);

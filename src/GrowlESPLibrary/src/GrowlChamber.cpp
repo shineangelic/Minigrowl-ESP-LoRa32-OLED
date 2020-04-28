@@ -31,7 +31,8 @@ float _curHum;
 float _curTempExt;
 float _curHumExt;
 float _pressure;
-bool _dhtErr, _bme280Err;
+bool _dhtErr = true;
+bool _bme280Err = true;
 
 /** Ticker for temperature reading */
 Ticker tempTicker;
@@ -107,8 +108,6 @@ void GrowlChamber::loop()
 	digitalWrite(_outTakeFan.getPid(), _outTakeFan.getReading());
 	digitalWrite(_hvac.getPid(), _hvac.getReading());
 
-
-
 	yield();
 }
 
@@ -149,7 +148,7 @@ bool GrowlChamber::initTemp() {
 	}
 	return true;
 }
- 
+
 
 /**
  * triggerGetTemp
@@ -195,9 +194,8 @@ void retrieveTemperatureTask() {
 	if (_dht.getStatus() != 0) {
 		Serial.println("DHT22 error status: " + String(_dht.getStatusString()));
 		_dhtErr = true;
-		//_tempSensorExt.setHasError(true);
-		//return;
-	}else {
+	}
+	else {
 		_dhtErr = false;
 		float heatIndex = _dht.computeHeatIndex(newValues.temperature, newValues.humidity);
 		float dewPoint = _dht.computeDewPoint(newValues.temperature, newValues.humidity);
@@ -260,24 +258,6 @@ void retrieveTemperatureTask() {
 	_curHum = humidity;
 	_pressure = pressure;
 
-}
-
-
-
-bool GrowlChamber::getMainLightsStatus()
-{
-	return _mainLights.getReading() > 0;
-}
-
-bool GrowlChamber::getIntakeFanStatus()
-{
-	return _inTakeFan.getReading() > 0;
-}
-
-
-bool GrowlChamber::getHeatingStatus()
-{
-	return _hvac.getReading() > 0;
 }
 
 bool GrowlChamber::switchMainLights(int on)
@@ -344,7 +324,7 @@ void GrowlChamber::setBME280Pin(int SCLPIN, int SDAPIN)
 {
 	_SCLPIN = SCLPIN;
 	_SDAPIN = SDAPIN;
-	_barometer.setPid(SDA);
+	_barometer.setPid(SDAPIN);
 	_humiditySensor.setPid(SCLPIN);
 	_humiditySensorExt.setPid(SCLPIN + EXT_OFFSET);
 
@@ -352,7 +332,7 @@ void GrowlChamber::setBME280Pin(int SCLPIN, int SDAPIN)
 
 bool GrowlChamber::hasErrors()
 {
-	return _dhtErr || _bme280Err;
+	return _dhtErr || _bme280Err || _lightSensor.hasError();
 }
 
 MainLights* GrowlChamber::getMainLights()
@@ -374,33 +354,26 @@ Hvac* GrowlChamber::getHeater()
 {
 	return &_hvac;
 }
-
-/*float GrowlChamber::getTemperature()
-{
-	return _curTemp;
-}
-
-float GrowlChamber::getHumidity()
-{
-	//object for static? Im no good at C++ :(
-	return _curHum;
-}
-*/
+ 
 float GrowlChamber::getPressure()
 {
 	return _pressure;
 }
 
-
 int GrowlChamber::getLumen()
 {
-	return analogRead(_lightSensor.getPid());
+	float reading =  analogRead(_lightSensor.getPid());
+
+	if(isnan(reading))
+		_lightSensor.setHasError(true);
+	else
+		_lightSensor.setHasError(false);
 	//return (float)(1023 - sensorValue) * 10 / sensorValue;
 	/*Serial.println("the analog read data is ");
 	Serial.println(sensorValue);
 	Serial.println("the sensor resistance is ");
-	Serial.println(Rsensor, DEC);
-	return 0.0f;*/
+	Serial.println(Rsensor, DEC);*/
+	return reading;
 }
 
 BaromenterSensor* GrowlChamber::getBarometerSensor()
