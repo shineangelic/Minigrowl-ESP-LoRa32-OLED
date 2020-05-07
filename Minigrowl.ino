@@ -45,9 +45,9 @@ Connections
 // GPIO14 -- SX1278's RESET
 // GPIO26 -- SX1278's IRQ(Interrupt Request)
 #define MAIN_LIGHTS 12
-#define HEATER		25//onboardLED
+#define HEATER		2//onboardLED
 #define OUTTAKE_FAN	13
-#define INTAKE_FAN	2
+#define INTAKE_FAN	25
 #define OLED		16
 //BME280 temperature sensor
 #define SCL 17
@@ -99,7 +99,7 @@ void setup(void)
 	pinMode(ERRPIN, OUTPUT);
 
 	//call chamber delegate AFTER having set PINs
-	gm.initChamber(host, httpPort);
+	gm.initChamber(host, httpPort, proto);
 	delay(1000);//wait DHT
 
 	//OLED

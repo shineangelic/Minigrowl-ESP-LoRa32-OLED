@@ -15,7 +15,7 @@
 #include <GrowlActuator.h>
 #include <GrowlManager.h>
 #include <GrowlCommand.h>
- 
+
 using namespace std;
 
 const char* CONTENT_TYPE_JSON_UTF8 = "application/json;charset=UTF-8";
@@ -31,10 +31,11 @@ int _sleepDelay = BASE_SLEEP;
 
 
 //the pin has to be already set
-void GrowlManager::initChamber(const char* serverhost, const int serverport)
+void GrowlManager::initChamber(const char* serverhost, const int serverport, const char* prot)
 {
 	_host = serverhost;
 	_httpPort = serverport;
+	_proto = prot;
 	_pc = 0;
 	_chamber.init();
 
@@ -158,35 +159,41 @@ void GrowlManager::applyServerCommands()
 			_commandsQueue.pop_front();
 			bool removed = removeExecutedCommand(&exec);
 		}
+		else {
 
-		//look for actuator
-		for (auto const& actuatorToSend : _actuatorsPtr) {
-			//Se trova, fa pop della coda e delete sul srv
-			if (actuatorToSend->getPid() == exec.getTargetActuatorId()) {
-				_commandsQueue.pop_front();
-				int ret = actuatorToSend->executeCommand(exec);
-				Serial.print("COMMAND EXEC, RETURN=");
-				Serial.println(ret);
-				bool removed = removeExecutedCommand(&exec);
-				 
-				delay(250);
-				//let srv breath
-				try
-				{
-					String url = "/api/esp/v1/actuators/id/";
-					url += actuatorToSend->getPid();
-					String completeUrl = String("") + _host + ":" + _httpPort + url;
-					sendActuator(completeUrl, actuatorToSend);
-					delay(500);//let srv breath
+			//look for actuator
+			for (auto const& actuatorToSend : _actuatorsPtr) {
+				//Se trova, fa pop della coda e delete sul srv
+				if (actuatorToSend->getPid() == exec.getTargetActuatorId()) {
+					_commandsQueue.pop_front();
+					int ret = actuatorToSend->executeCommand(exec);
+					Serial.print("COMMAND EXEC, RETURN=");
+					Serial.println(ret);
+					bool removed = removeExecutedCommand(&exec);
+
+					delay(250);
+					//let srv breath
+					try
+					{
+						String url = "/api/esp/v1/actuators/id/";
+						url += actuatorToSend->getPid();
+						String completeUrl = String("") + _proto + _host + ":" + _httpPort + url;
+						sendActuator(completeUrl, actuatorToSend);
+						delay(500);//let srv breath
+					}
+					catch (const std::exception& we)
+					{
+						Serial.print("ERRORE UPDATE SECCO");
+						Serial.println(we.what());
+					}
+					return;
 				}
-				catch (const std::exception& we)
-				{
-					Serial.print("ERRORE UPDATE SECCO");
-					Serial.println(we.what());
-				} 
-				break;
 			}
-
+			Serial.println("UNEXECUTED?");
+			Serial.print("getValueParameter=");
+			Serial.print(exec.getValueParameter());
+			Serial.print("getTargetActuatorId=");
+			Serial.print(exec.getTargetActuatorId());
 		}
 	}
 
@@ -200,7 +207,7 @@ bool GrowlManager::removeExecutedCommand(GrowlCommand* executed) {
 	// We now create a URI for the request
 	String url = "/api/esp/v1/commands/id/";
 	url += executed->getQueueId();
-	String completeUrl = String("") + _host + ":" + _httpPort + url;
+	String completeUrl = String("")+ _proto + _host + ":" + _httpPort + url;
 	Serial.print("removeExecutedCommand() url: ");
 	Serial.println(completeUrl);
 
@@ -223,17 +230,21 @@ void GrowlManager::retrieveServerCommands()
 
 	if (!client.connect(_host, _httpPort)) {
 		Serial.println("retrieveServerCommands() connection failed");
+		Serial.print("host: ");
+		Serial.print(_host);
+		Serial.print(" port: ");
+		Serial.print(_httpPort);
 		return;
 	}
 
 	// We now create a URI for the request
 	String urlPath = "/api/esp/v1/commands/";
-	String completeUrl = String("") + _host + ":" + _httpPort + urlPath;
+	String completeUrl = String("") + _proto + _host + ":" + _httpPort + urlPath;
 
 	Serial.print("retrieveServerCommands: ");
 	Serial.println(completeUrl);
 
-	http.begin(completeUrl); //Specify destination for HTTP request
+	bool began = http.begin(completeUrl); //Specify destination for HTTP request
 	http.addHeader("Content-Type", CONTENT_TYPE_JSON_UTF8); //Specify content-type header
 	int httpResponseCode = http.GET();
 
@@ -273,7 +284,8 @@ void GrowlManager::retrieveServerCommands()
 				_commandsQueue.push_front(newC);
 			}
 		}
-	}else {
+	}
+	else {
 		Serial.print("Error on HTTP request: ");
 		Serial.println(httpResponseCode);
 	}
@@ -286,7 +298,7 @@ void GrowlManager::sendRandomSensor()
 	// We now create a URI for the request
 	String url = "/api/esp/v1/sensors/id/";
 	url += toSend->getPid();
-	String completeUrl = String("") + _host + ":" + _httpPort + url;
+	String completeUrl = String("") + _proto + _host + ":" + _httpPort + url;
 
 	sendSensor(completeUrl, toSend);
 }
@@ -324,7 +336,7 @@ void GrowlManager::sendRandomActuator()
 	GrowlActuator* toSend = _actuatorsPtr.at(_pc % _actuatorsPtr.size());
 	String url = "/api/esp/v1/actuators/id/";
 	url += toSend->getPid();
-	String completeUrl = String("") + _host + ":" + _httpPort + url;
+	String completeUrl = String("") + _proto + _host + ":" + _httpPort + url;
 	sendActuator(completeUrl, toSend);
 }
 
@@ -340,7 +352,7 @@ void GrowlManager::sendActuator(const String completeUrl, GrowlActuator* toSend)
 
 	Serial.print("Send actuator: ");
 	Serial.println(completeUrl);
-	
+
 	const std::string vray = toSend->toJSON();
 	Serial.print("HTTP REQ:");
 	Serial.println(vray.c_str());

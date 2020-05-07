@@ -5,7 +5,7 @@
 
 static const auto MODE_AUTO = -2;
 static const auto  MODE_MANUAL = -1;
-static const auto  CMD_FULLREFRESH = -1;
+static const auto  CMD_FULLREFRESH = -3;
 
 class GrowlActuator : public GrowlDevice
 {

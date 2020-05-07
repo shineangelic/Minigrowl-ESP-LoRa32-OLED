@@ -262,8 +262,8 @@ void retrieveTemperatureTask() {
 
 bool GrowlChamber::switchMainLights(int on)
 {
-	_mainLights.setReading(on ? 1 : 0);
-	digitalWrite(_mainLights.getPid(), _mainLights.getReading());
+	_mainLights.setReading(on);
+	//digitalWrite(_mainLights.getPid(), _mainLights.getReading());
 	return _mainLights.getReading();
 }
 

@@ -27,7 +27,7 @@ class GrowlManager
 {
 public:
 	GrowlManager() : _chamber() {};
-	void initChamber(const char* host, const int port);
+	void initChamber(const char* host, const int port, const char* prot);
 	void loop();
 	void calcDelay();
 	std::string reportStatus();
@@ -55,6 +55,7 @@ private:
 	std::vector<GrowlSensor*>	_sensorsPtr;
 	std::vector<GrowlActuator*> _actuatorsPtr;
 	const char* _host;//"192.168.0.54";
+	const char* _proto = "http://";
 	int _httpPort;
 	//commands to be executed
 	std::deque<GrowlCommand> _commandsQueue;
