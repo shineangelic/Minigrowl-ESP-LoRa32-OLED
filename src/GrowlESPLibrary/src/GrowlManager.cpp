@@ -20,10 +20,10 @@ using namespace std;
 
 const char* CONTENT_TYPE_JSON_UTF8 = "application/json;charset=UTF-8";
 
-const int hourSchedule[] = { 1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+const int hourSchedule[] = { 1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 const int BASE_SLEEP = 250;
 
-const int MAX_SLEEP = 10000;//15 seconds
+const int MAX_SLEEP = 12000;//15 seconds
 const int SLEEP_INCREMENT = 10;//100 cycles to increment a second
 
 //cit. Menzi va veloce ogni tanto
@@ -66,19 +66,13 @@ void GrowlManager::loop()
 
 	calcDelay();
 
-
 	applyServerCommands();
 
 	//let the chamber do its readings
 	_chamber.loop();
 
-	/*sendRandomSensor();
-	delay(2000);
-	sendRandomActuator();
-	delay(2000);*/
-
 	//these are sent one per PC
-	if (_pc % 11 == 0 || _sburtoMode > 0) {
+	if (_pc % 17 == 0 || _sburtoMode > 0) {
 		sendRandomActuator();
 		delay(200);
 	}
@@ -92,8 +86,6 @@ void GrowlManager::loop()
 	Serial.print("WILL SLEEP ");
 	Serial.println(_sleepDelay);
 	delay(_sleepDelay);
-	//non va, per la storia UTC. Alla fine uso NTP
-	//retrieveTime();
 }
 
 void GrowlManager::calcDelay() {
@@ -111,27 +103,36 @@ void GrowlManager::calcDelay() {
 
 void GrowlManager::chamberLogic()
 {
+	/*time_t tnow;
+	time(&tnow);
+	//int ret = localtime_s(&when, &tnow);
+	struct tm* now = localtime(&tnow);
+	char chTime[9] = ""; */
 
-	//LIFECYCLE
-	struct tm now;
-	getLocalTime(&now, 0);
-	Serial.print("LOCAL HOUR: ");
-	Serial.println(now.tm_hour);
-	/*Serial.print(" SCHED: ");
-	Serial.print(hourSchedule[now.tm_hour]);
-	Serial.print(" CUR: ");
-	Serial.println(_chamber.getMainLights()->getReading());*/
-	//mainlights schedule
-	if (_chamber.getMainLights()->getMode() == MODE_AUTO) {
-		if (hourSchedule[now.tm_hour] != _chamber.getMainLights()->getReading()) {
-			Serial.print("AUTO LIGHTS SWITCH: ");
-			Serial.println(hourSchedule[now.tm_hour]);
-			_chamber.switchMainLights(hourSchedule[now.tm_hour]);
+	struct tm timeinfo;
+	//struct tm now;
+	if (getLocalTime(&timeinfo)) {
+		//LIFECYCLE
+		Serial.print("LOCAL HOUR: ");
+		Serial.println(timeinfo.tm_hour);
+		/*Serial.print(" SCHED: ");
+		Serial.print(hourSchedule[now.tm_hour]);
+		Serial.print(" CUR: ");
+		Serial.println(_chamber.getMainLights()->getReading());*/
+		//mainlights schedule
+		if (_chamber.getMainLights()->getMode() == MODE_AUTO) {
+			if (hourSchedule[timeinfo.tm_hour] != _chamber.getMainLights()->getReading()) {
+				Serial.print("AUTO LIGHTS SWITCH: ");
+				Serial.println(hourSchedule[timeinfo.tm_hour]);
+				_chamber.switchMainLights(hourSchedule[timeinfo.tm_hour]);
+			}
 		}
+		else
+			Serial.println("MANUAL LIGHTS");
 	}
 	else
-		Serial.println("MANUAL LIGHTS");
-	//_mainLights.setReading(hourSchedule[now.tm_hour]);
+		Serial.println("getLocalTime() ERROR");
+
 	//heat out take
 	if (_chamber.getOuttakeFan()->getMode() == MODE_AUTO) {
 		if (_chamber.getTemperatureSensor()->getReading() > 29) {
@@ -192,7 +193,7 @@ void GrowlManager::applyServerCommands()
 			Serial.println("UNEXECUTED?");
 			Serial.print("getValueParameter=");
 			Serial.print(exec.getValueParameter());
-			Serial.print("getTargetActuatorId=");
+			Serial.print(" getTargetActuatorId=");
 			Serial.print(exec.getTargetActuatorId());
 		}
 	}
@@ -207,7 +208,7 @@ bool GrowlManager::removeExecutedCommand(GrowlCommand* executed) {
 	// We now create a URI for the request
 	String url = "/api/esp/v1/commands/id/";
 	url += executed->getQueueId();
-	String completeUrl = String("")+ _proto + _host + ":" + _httpPort + url;
+	String completeUrl = String("") + _proto + _host + ":" + _httpPort + url;
 	Serial.print("removeExecutedCommand() url: ");
 	Serial.println(completeUrl);
 
@@ -218,7 +219,6 @@ bool GrowlManager::removeExecutedCommand(GrowlCommand* executed) {
 
 	Serial.print("removeExecutedCommand() RESPONSE:");
 	Serial.println(httpResponseCode);
-	//Serial.println(_lightSensor.toJSON().c_str());
 	http.end();
 	return (httpResponseCode == 200);
 }
@@ -229,7 +229,7 @@ void GrowlManager::retrieveServerCommands()
 	HTTPClient http;
 
 	if (!client.connect(_host, _httpPort)) {
-		Serial.println("retrieveServerCommands() connection failed");
+		Serial.println("retrieveServerCommands() connection failed: ");
 		Serial.print("host: ");
 		Serial.print(_host);
 		Serial.print(" port: ");
@@ -366,16 +366,19 @@ void GrowlManager::sendActuator(const String completeUrl, GrowlActuator* toSend)
 
 }
 
-
-
 std::string GrowlManager::reportStatus()
 {
-	time_t tnow;
+	/*time_t tnow;
 	time(&tnow);
 	//int ret = localtime_s(&when, &tnow);
 	struct tm* when = localtime(&tnow);
-	char chTime[9] = "";
-	strftime(chTime, 9, "%H:%M:%S", when);
+	*/
+
+	struct tm timeinfo;
+	getLocalTime(&timeinfo);
+
+	char chTime[21] = "";
+	strftime(chTime, 21, " %H:%M:%S %d/%m/%Y", &timeinfo);
 
 	std::ostringstream ss;
 	ss << "LIGHT: ";
