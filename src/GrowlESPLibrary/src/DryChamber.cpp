@@ -1,7 +1,7 @@
 #include <GrowlDevice.h>
 #include <GrowlSensor.h>
 #include <DryChamber.h>
-#include <DHTesp.h>
+
 #include <Ticker.h>
 
 #include <sstream>
@@ -106,6 +106,8 @@ std::string DryChamber::reportStatus()
 	   
 	ss << "FAN - OUT: ";
 	ss << (this->getOuttakeFan()->getReading() != 0 ? "ON" : "OFF");
+	ss << " PID: ";
+	ss << (this->getOuttakeFan()->getPid());
 	ss << "\n";
 	ss << "Hum: ";
 	ss << (std::ceil(this->getHumiditySensor()->getReading() * 10) / 10) << "%";
@@ -240,7 +242,7 @@ void DryChamber::setIntakeFanPin(int HWPIN)
 void DryChamber::setOuttakeFanPin(int HWPIN)
 {
 	_outTakeFan.setPid(HWPIN);
-	Serial.println("dry chamber set _outTakeFan PIN ");
+
 }
 
 void DryChamber::setHeaterPin(int HWPIN)

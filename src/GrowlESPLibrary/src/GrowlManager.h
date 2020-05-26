@@ -27,7 +27,7 @@
 class GrowlManager
 {
 public:
-	GrowlManager(int bid, int mode) {
+	GrowlManager(int bid, int mode) : _chamberD(bid), _chamberM(bid) {
 		_boardId = bid; _chamberMode = mode;
 		if (_chamberMode == 1) {
 			_chamberM = GrowlChamber(bid);

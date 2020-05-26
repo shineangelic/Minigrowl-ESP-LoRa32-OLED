@@ -18,7 +18,8 @@ class DryChamber : public Chamber
 {
 
 public:
-	DryChamber() {};
+
+
 	DryChamber(int bid) : _outTakeFan(bid), _humiditySensor(bid), _tempSensor(bid), _barometer(bid) {
 	};
 	void init();

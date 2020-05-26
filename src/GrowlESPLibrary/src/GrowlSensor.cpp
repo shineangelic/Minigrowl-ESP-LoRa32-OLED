@@ -30,6 +30,7 @@ std::string GrowlSensor::toJSON()
 	doc["typ"] = t;
 	doc["val"] = _reading;
 	doc["id"] = _gpioid;
+	doc["bid"] = _boardId;
 	doc["err"] = _errorPresent;
 	doc["unt"] = _unit;
 

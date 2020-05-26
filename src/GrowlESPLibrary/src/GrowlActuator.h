@@ -14,12 +14,14 @@ public:
 		_supportedCommands.push_back(new GrowlCommand("Manual mode", -1));
 		_supportedCommands.push_back(new GrowlCommand("AUTO mode", -2));
 		_mode = MODE_AUTO;
+		Serial.println("GrowlDevice( )");
 	};
 	//GrowlActuator(int gpid);
 	GrowlActuator(int bid) : GrowlDevice(bid) {
 		_supportedCommands.push_back(new GrowlCommand("Manual mode", -1));
 		_supportedCommands.push_back(new GrowlCommand("AUTO mode", -2));
 		_mode = MODE_AUTO;
+		Serial.println("GrowlDevice(bid)");
 	};
 	std::string toJSON();
 	std::string getName();

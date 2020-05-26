@@ -43,7 +43,7 @@ void GrowlManager::initChamber(const char* serverhost, const int serverport, con
 	_chamber->init();
 
 	if (_chamberMode != DRY_MODE) {
-		GrowlChamber* cptr = (GrowlChamber*) &_chamber;
+		GrowlChamber* cptr = (GrowlChamber*)_chamber;
 		_sensorsPtr.push_back(cptr->getLightSensor());
 		_sensorsPtr.push_back(cptr->getTemperatureSensor());
 		_sensorsPtr.push_back(cptr->getHumiditySensor());
@@ -57,7 +57,8 @@ void GrowlManager::initChamber(const char* serverhost, const int serverport, con
 		_actuatorsPtr.push_back(cptr->getHeater());
 	}
 	else {
-		DryChamber* cptr = (DryChamber*)&_chamber;
+		
+		DryChamber* cptr = (DryChamber*)_chamber;
 		//_actuatorsPtr.push_back(cptr->getIntakeFan());
 		_actuatorsPtr.push_back(cptr->getOuttakeFan());
 		_sensorsPtr.push_back(cptr->getTemperatureSensor());
@@ -265,8 +266,11 @@ void GrowlManager::sendRandomSensor()
 {
 	GrowlSensor* toSend = _sensorsPtr.at(_pc % _sensorsPtr.size());
 	// We now create a URI for the request
-	String url = "/api/esp/v1/sensors/id/";
+	String url = "/api/esp/v2/sensors/";
+	url += _boardId;
+	url += "/";
 	url += toSend->getPid();
+	
 	String completeUrl = String("") + _proto + _host + ":" + _httpPort + url;
 
 	sendSensor(completeUrl, toSend);
@@ -307,7 +311,9 @@ void GrowlManager::sendRandomActuator()
 	url += _boardId;
 	url += "/";
 	url += toSend->getPid();
-	Serial.print("Send pid: " );
+
+	Serial.print("SENDING POS:");
+	Serial.println(_pc % _actuatorsPtr.size());
 
 	String completeUrl = String("") + _proto + _host + ":" + _httpPort + url;
 	sendActuator(completeUrl, toSend);
