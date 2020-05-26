@@ -1,8 +1,11 @@
 #include <GrowlDevice.h>
 #include <GrowlSensor.h>
+#include <Chamber.h>
 #include <GrowlChamber.h>
 #include <DHTesp.h>
 #include <Ticker.h>
+#include <sstream>
+#include <ostream>
 /*
 https://github.com/beegee-tokyo/DHTesp/blob/master/examples/DHT_ESP32/DHT_ESP32.ino
 
@@ -15,6 +18,8 @@ here named lights, outFan and inFan and Heater
 #define TIMER_INTERVAL_SECONDS 20
 #define BME280_INTERVAL_MSEC 60000
 #define EXT_OFFSET 32
+
+const int hourSchedule[] = { 1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 
 /** Task handle to retrieve sensors value */
 //void tempTask(void* pvParameters);
@@ -72,6 +77,9 @@ void GrowlChamber::init()
 void GrowlChamber::loop()
 {
 
+
+
+
 	if (!tasksEnabled) {
 		// Wait 2 seconds to let system settle down
 		delay(2000);
@@ -107,6 +115,41 @@ void GrowlChamber::loop()
 	digitalWrite(_inTakeFan.getPid(), _inTakeFan.getReading());
 	digitalWrite(_outTakeFan.getPid(), _outTakeFan.getReading());
 	digitalWrite(_hvac.getPid(), _hvac.getReading());
+
+
+	struct tm timeinfo;
+	//struct tm now;
+	if (getLocalTime(&timeinfo)) {
+		//LIFECYCLE
+		Serial.print("LOCAL HOUR: ");
+		Serial.println(timeinfo.tm_hour);
+		/*Serial.print(" SCHED: ");
+		Serial.print(hourSchedule[now.tm_hour]);
+		Serial.print(" CUR: ");
+		Serial.println(_chamber.getMainLights()->getReading());*/
+		//mainlights schedule
+		if (_mainLights.getMode() == MODE_AUTO) {
+			if (hourSchedule[timeinfo.tm_hour] != _mainLights.getReading()) {
+				Serial.print("AUTO LIGHTS SWITCH: ");
+				Serial.println(hourSchedule[timeinfo.tm_hour]);
+				 switchMainLights(hourSchedule[timeinfo.tm_hour]);
+			}
+		}
+		else
+			Serial.println("MANUAL LIGHTS");
+	}
+	else
+		Serial.println("getLocalTime() ERROR");
+
+	//heat out take
+	if (_outTakeFan.getMode() == MODE_AUTO) {
+		if (_tempSensor.getReading() > 29) {
+			switchOuttakeFan(true);
+		}
+		else if (_tempSensor.getReading() < 27) {
+			switchOuttakeFan(false);
+		}
+	}
 
 	yield();
 }
@@ -258,6 +301,45 @@ void retrieveTemperatureTask() {
 	_curHum = humidity;
 	_pressure = pressure;
 
+}
+
+std::string GrowlChamber::reportStatus()
+{
+	/*time_t tnow;
+	time(&tnow);
+	//int ret = localtime_s(&when, &tnow);
+	struct tm* when = localtime(&tnow);
+	*/
+
+	struct tm timeinfo;
+	getLocalTime(&timeinfo);
+
+	char chTime[21] = "";
+	strftime(chTime, 21, " %H:%M:%S %d/%m/%Y", &timeinfo);
+
+	std::ostringstream ss;
+	ss << "LIGHT: ";
+	ss << (this->getMainLights()->getReading() != 0 ? "ON" : "OFF");
+	ss << " HEATER: ";
+	ss << (this->getHeater()->getReading() != 0 ? "ON" : "OFF");
+	ss << "\n";
+	ss << "FAN: IN: ";
+	ss << (this->getIntakeFan()->getReading() != 0 ? "ON" : "OFF");
+	ss << " - OUT: ";
+	ss << (this->getOuttakeFan()->getReading() != 0 ? "ON" : "OFF");
+	ss << "\n";
+	ss << "Hum: ";
+	ss << (std::ceil(this->getHumiditySensor()->getReading() * 10) / 10) << "%";
+	ss << " Temp: ";
+	ss << (std::ceil(this->getTemperatureSensor()->getReading() * 10) / 10) << "°C";
+	ss << "\n";
+	ss << this->getLumen() << "LUX   ";
+	ss << " T.ext: ";
+	ss << (std::ceil(this->getExternalTemperatureSensor()->getReading() * 10) / 10) << "°C";
+	ss << "\n";
+	ss << chTime;
+	//std::string s(ss.str());
+	return ss.str();
 }
 
 bool GrowlChamber::switchMainLights(int on)

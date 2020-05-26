@@ -57,8 +57,10 @@ Connections
 #define DHTPIN 22 
 #define ERRPIN 23//error LED
 
+#define BOARD_ID 1 
+
 //grow room service coordinator
-GrowlManager gm = GrowlManager();
+GrowlManager gm = GrowlManager(BOARD_ID, 1);
 
 //oled display, can be easily removed
 SSD1306  display(0x3c, 4, 15);

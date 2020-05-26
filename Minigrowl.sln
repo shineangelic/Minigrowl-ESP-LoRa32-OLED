@@ -9,10 +9,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GrowlESPLibrary", "src\Grow
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SketchDHT22test", "..\Sketch1Test\Sketch1Test.vcxproj", "{9ED35C2C-D38A-4CE5-B878-7CA8EBCE24A2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MiniDry", "..\MiniDry\MiniDry.vcxproj", "{FB0B5B5B-C9A4-4850-B496-D9D22FE05371}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\GrowlESPLibrary\GrowlESPLibrary.vcxitems*{c5f80730-f44f-4478-bdae-6634efc2ca88}*SharedItemsImports = 4
 		src\GrowlESPLibrary\GrowlESPLibrary.vcxitems*{e8b4bc01-65bd-47ae-8e2d-80a11da6b3c8}*SharedItemsImports = 9
+		src\GrowlESPLibrary\GrowlESPLibrary.vcxitems*{fb0b5b5b-c9a4-4850-b496-d9d22fe05371}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -27,6 +30,10 @@ Global
 		{9ED35C2C-D38A-4CE5-B878-7CA8EBCE24A2}.Debug|x86.Build.0 = Debug|Win32
 		{9ED35C2C-D38A-4CE5-B878-7CA8EBCE24A2}.Release|x86.ActiveCfg = Release|Win32
 		{9ED35C2C-D38A-4CE5-B878-7CA8EBCE24A2}.Release|x86.Build.0 = Release|Win32
+		{FB0B5B5B-C9A4-4850-B496-D9D22FE05371}.Debug|x86.ActiveCfg = Debug|Win32
+		{FB0B5B5B-C9A4-4850-B496-D9D22FE05371}.Debug|x86.Build.0 = Debug|Win32
+		{FB0B5B5B-C9A4-4850-B496-D9D22FE05371}.Release|x86.ActiveCfg = Release|Win32
+		{FB0B5B5B-C9A4-4850-B496-D9D22FE05371}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,8 +3,7 @@
 #include "arduino.h"
 #else
 #include "WProgram.h"
-#endif
-#include <DHTesp.h>
+#endif 
 //Libraries for BME280
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
@@ -15,20 +14,16 @@
 here named lights, outFan and inFan and Heater */
 
 
-class GrowlChamber : public Chamber
+class DryChamber : public Chamber
 {
 
 public:
-	GrowlChamber(){};
+	DryChamber(){};
 	void init();
 	void loop(); 
-
-	std::string reportStatus();
-
-	bool switchMainLights(int on);
+	std::string reportStatus(); 
 	bool switchIntakeFan(bool on);
-	bool switchOuttakeFan(bool on);
-	bool switchHeater(bool on);
+	bool switchOuttakeFan(bool on);  
 
 	void setMainLightsPin(int HWPIN);
 	void setIntakeFanPin(int HWPIN);
@@ -38,19 +33,15 @@ public:
 	void setDhtPin(int HWPIN);
 	void setBME280Pin(int SCLPIN, int SDAPIN);
 
-	bool hasErrors();
-	MainLights*		getMainLights();
+	bool hasErrors(); 
 	IntakeFan*		getIntakeFan();
 	OutTakeFan*		getOuttakeFan();
-	Hvac*			getHeater();
 	float			getPressure();
 	int				getLumen();//NOT real Lumen!
 	BaromenterSensor*	getBarometerSensor();
 	TemperatureSensor*	getTemperatureSensor();
 	HumiditySensor*		getHumiditySensor();
-	TemperatureSensor*	getExternalTemperatureSensor();
-	HumiditySensor*		getExternalHumiditySensor();
-	LightSensor*		getLightSensor();
+	HumiditySensor*		getExternalHumiditySensor(); 
 private:
 	
 	bool initTemp();
@@ -67,8 +58,6 @@ private:
 	LightSensor					_lightSensor;
 	HumiditySensor				_humiditySensor;
 	TemperatureSensor			_tempSensor;
-	HumiditySensor				_humiditySensorExt;
-	TemperatureSensor			_tempSensorExt;
 	BaromenterSensor			_barometer;
 };
 

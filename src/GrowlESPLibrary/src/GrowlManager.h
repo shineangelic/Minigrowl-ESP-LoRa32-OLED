@@ -20,18 +20,29 @@
 #include <GrowlActuator.h>
 #include <ctime>
 #include <GrowlChamber.h>
+#include <DryChamber.h>
 
 
 
 class GrowlManager
 {
 public:
-	GrowlManager() : _chamber() {};
+	GrowlManager(int bid, int mode) {
+		_boardId = bid; _chamberMode = mode;
+		if (_chamberMode == 1) {
+			_chamberM = GrowlChamber();
+			_chamber = (Chamber*)&_chamberM;
+		}
+		else {
+			_chamberD = DryChamber();
+			_chamber = (Chamber*)&_chamberD;
+		}
+	};
 	void initChamber(const char* host, const int port, const char* prot);
 	void loop();
 	void calcDelay();
 	std::string reportStatus();
-	GrowlChamber getChamber();
+	Chamber* getChamber();
 	void initMainLights(int HWPIN);
 	void initIntakeFan(int HWPIN);
 	void initOuttakeFanPin(int HWPIN);
@@ -51,12 +62,16 @@ private:
 	void chamberLogic();
 	short _pc;//program counter
 	short _sburtoMode;
-	GrowlChamber	_chamber;
+	Chamber*	_chamber;
+	GrowlChamber _chamberM;
+	DryChamber _chamberD;
 	std::vector<GrowlSensor*>	_sensorsPtr;
 	std::vector<GrowlActuator*> _actuatorsPtr;
 	const char* _host;//"192.168.0.54";
 	const char* _proto = "http://";
 	int _httpPort;
+	int _boardId;
+	int _chamberMode;//1 grow - 2 dry
 	//commands to be executed
 	std::deque<GrowlCommand> _commandsQueue;
 };

@@ -16,11 +16,14 @@
 #include <GrowlManager.h>
 #include <GrowlCommand.h>
 
+#define BOARD_ID 2
+#define DRY_MODE 2
+
 using namespace std;
 
 const char* CONTENT_TYPE_JSON_UTF8 = "application/json;charset=UTF-8";
 
-const int hourSchedule[] = { 1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+//const int hourSchedule[] = { 1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 const int BASE_SLEEP = 250;
 
 const int MAX_SLEEP = 12000;//15 seconds
@@ -37,19 +40,27 @@ void GrowlManager::initChamber(const char* serverhost, const int serverport, con
 	_httpPort = serverport;
 	_proto = prot;
 	_pc = 0;
-	_chamber.init();
+	_chamber->init();
 
-	_sensorsPtr.push_back(_chamber.getLightSensor());
-	_sensorsPtr.push_back(_chamber.getTemperatureSensor());
-	_sensorsPtr.push_back(_chamber.getHumiditySensor());
-	_sensorsPtr.push_back(_chamber.getBarometerSensor());
-	_sensorsPtr.push_back(_chamber.getExternalTemperatureSensor());
-	_sensorsPtr.push_back(_chamber.getExternalHumiditySensor());
+	if (_chamberMode != DRY_MODE) {
+		GrowlChamber* cptr = (GrowlChamber*) &_chamber;
+		_sensorsPtr.push_back(cptr->getLightSensor());
+		_sensorsPtr.push_back(cptr->getTemperatureSensor());
+		_sensorsPtr.push_back(cptr->getHumiditySensor());
+		_sensorsPtr.push_back(cptr->getBarometerSensor());
+		_sensorsPtr.push_back(cptr->getExternalTemperatureSensor());
+		_sensorsPtr.push_back(cptr->getExternalHumiditySensor());
 
-	_actuatorsPtr.push_back(_chamber.getIntakeFan());
-	_actuatorsPtr.push_back(_chamber.getOuttakeFan());
-	_actuatorsPtr.push_back(_chamber.getMainLights());
-	_actuatorsPtr.push_back(_chamber.getHeater());
+		_actuatorsPtr.push_back(cptr->getIntakeFan());
+		_actuatorsPtr.push_back(cptr->getOuttakeFan());
+		_actuatorsPtr.push_back(cptr->getMainLights());
+		_actuatorsPtr.push_back(cptr->getHeater());
+	}
+	else {
+		DryChamber* cptr = (DryChamber*)&_chamber;
+		_actuatorsPtr.push_back(cptr->getIntakeFan());
+		_actuatorsPtr.push_back(cptr->getOuttakeFan());
+	}
 }
 
 void GrowlManager::loop()
@@ -69,7 +80,7 @@ void GrowlManager::loop()
 	applyServerCommands();
 
 	//let the chamber do its readings
-	_chamber.loop();
+	_chamber->loop();
 
 	//these are sent one per PC
 	if (_pc % 17 == 0 || _sburtoMode > 0) {
@@ -109,16 +120,14 @@ void GrowlManager::chamberLogic()
 	struct tm* now = localtime(&tnow);
 	char chTime[9] = ""; */
 
+	/*
 	struct tm timeinfo;
 	//struct tm now;
 	if (getLocalTime(&timeinfo)) {
 		//LIFECYCLE
 		Serial.print("LOCAL HOUR: ");
 		Serial.println(timeinfo.tm_hour);
-		/*Serial.print(" SCHED: ");
-		Serial.print(hourSchedule[now.tm_hour]);
-		Serial.print(" CUR: ");
-		Serial.println(_chamber.getMainLights()->getReading());*/
+		
 		//mainlights schedule
 		if (_chamber.getMainLights()->getMode() == MODE_AUTO) {
 			if (hourSchedule[timeinfo.tm_hour] != _chamber.getMainLights()->getReading()) {
@@ -141,7 +150,7 @@ void GrowlManager::chamberLogic()
 		else if (_chamber.getTemperatureSensor()->getReading() < 27) {
 			_chamber.switchOuttakeFan(false);
 		}
-	}
+	}*/
 }
 
 
@@ -374,80 +383,61 @@ std::string GrowlManager::reportStatus()
 	struct tm* when = localtime(&tnow);
 	*/
 
-	struct tm timeinfo;
-	getLocalTime(&timeinfo);
-
-	char chTime[21] = "";
-	strftime(chTime, 21, " %H:%M:%S %d/%m/%Y", &timeinfo);
-
-	std::ostringstream ss;
-	ss << "LIGHT: ";
-	ss << (_chamber.getMainLights()->getReading() != 0 ? "ON" : "OFF");
-	ss << " HEATER: ";
-	ss << (_chamber.getHeater()->getReading() != 0 ? "ON" : "OFF");
-	ss << "\n";
-	ss << "FAN: IN: ";
-	ss << (_chamber.getIntakeFan()->getReading() != 0 ? "ON" : "OFF");
-	ss << " - OUT: ";
-	ss << (_chamber.getOuttakeFan()->getReading() != 0 ? "ON" : "OFF");
-	ss << "\n";
-	ss << "Hum: ";
-	ss << (std::ceil(this->getChamber().getHumiditySensor()->getReading() * 10) / 10) << "%";
-	ss << " Temp: ";
-	ss << (std::ceil(this->getChamber().getTemperatureSensor()->getReading() * 10) / 10) << "°C";
-	ss << "\n";
-	ss << this->getChamber().getLumen() << "LUX   ";
-	ss << " T.ext: ";
-	ss << (std::ceil(this->getChamber().getExternalTemperatureSensor()->getReading() * 10) / 10) << "°C";
-	ss << "\n";
-	ss << chTime;
-	//std::string s(ss.str());
-	return ss.str();
+	
+	return _chamber->reportStatus();
 }
 
 
-GrowlChamber GrowlManager::getChamber()
+Chamber* GrowlManager::getChamber()
 {
 	return _chamber;
 }
 
 void GrowlManager::initMainLights(int HWPIN)
 {
-	_chamber.setMainLightsPin(HWPIN);
+	GrowlChamber* cptr = (GrowlChamber*)&_chamber;
+	cptr->setMainLightsPin(HWPIN);
 }
 
 void GrowlManager::initIntakeFan(int HWPIN)
 {
-	_chamber.setIntakeFanPin(HWPIN);
+	Serial.println("initP");
+	_chamber->setIntakeFanPin(HWPIN);
+	Serial.print("initIntakeFan on PIN: ");
+	Serial.println(HWPIN);
 }
 
 void GrowlManager::initOuttakeFanPin(int HWPIN)
 {
-	_chamber.setOuttakeFanPin(HWPIN);
+	//GrowlChamber* cptr = (GrowlChamber*)&_chamber;
+	_chamber->setOuttakeFanPin(HWPIN);
 }
 
 bool GrowlManager::hasChamberError()
 {
-	return _chamber.hasErrors();
+	return _chamber->hasErrors();
 }
 
 void GrowlManager::setHeaterPin(int HWPIN)
 {
-	_chamber.setHeaterPin(HWPIN);
+	GrowlChamber* cptr = (GrowlChamber*)&_chamber;
+	cptr->setHeaterPin(HWPIN);
 }
 
 void GrowlManager::initLightSensor(int HWPIN)
 {
-	_chamber.setLightSensorPin(HWPIN);
+	GrowlChamber* cptr = (GrowlChamber*)&_chamber;
+	cptr->setLightSensorPin(HWPIN);
 }
 
 void GrowlManager::setDhtPin(int HWPIN)
 {
-	_chamber.setDhtPin(HWPIN);
+	GrowlChamber* cptr = (GrowlChamber*)&_chamber;
+	cptr->setDhtPin(HWPIN);
 }
 
 void GrowlManager::setBME280Pin(int SCLPIN, int SDAPIN)
 {
-	_chamber.setBME280Pin(SCLPIN, SDAPIN);
+	_chamber->setBME280Pin(SCLPIN, SDAPIN);
 }
 

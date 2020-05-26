@@ -20,6 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <!-- <ClInclude Include="$(MSBuildThisFileDirectory)GrowlESPLibrary.h" /> -->
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\Chamber.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\DryChamber.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlActuator.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlDevice.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)src\GrowlCommand.h" />
@@ -29,6 +31,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)src\Private.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\DryChamber.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlActuator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlDevice.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\GrowlCommand.cpp" />
