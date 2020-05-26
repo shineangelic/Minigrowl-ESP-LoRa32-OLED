@@ -1,4 +1,14 @@
-#include "GrowlDevice.h"
+#include <GrowlDevice.h>
+
+int GrowlDevice::getBoardId()
+{
+	return _boardId;
+}
+
+void GrowlDevice::setBoardId(int bid)
+{
+	_boardId = bid;
+}
 
 int GrowlDevice::getPid()
 {

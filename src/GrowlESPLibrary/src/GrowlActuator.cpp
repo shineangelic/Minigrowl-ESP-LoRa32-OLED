@@ -24,6 +24,7 @@ std::string GrowlActuator::toJSON()
 	doc["typ"]	= _name;
 	doc["val"]	= _reading;
 	doc["id"]	= _gpioid;
+	doc["bid"] = _boardId;
 	doc["err"]	= _errorPresent;
 	doc["mode"] = _mode;
 
@@ -31,10 +32,7 @@ std::string GrowlActuator::toJSON()
 	JsonArray supportedCommandsJA = doc.createNestedArray("cmds");
 
 	std::vector<GrowlCommand*>::iterator iter, end;
-	/*for (iter = _supportedCommands.begin(), end = _supportedCommands.end(); iter != end; ++iter) {
-		JsonObject ret = supportedCommandsJA.createNestedObject();
-		(*iter)->toJSON(&ret);
-	}*/
+	 
 	for (auto const& value : _supportedCommands) {
 		JsonObject ret = supportedCommandsJA.createNestedObject();
 		value->toJSON(&ret);
@@ -43,10 +41,15 @@ std::string GrowlActuator::toJSON()
 
 	std::string s("");
 	int p = serializeJson(doc, s);
-	//Serial.print("ACTUATOR SERIALIZED: ");
-	//Serial.println(s.c_str());
+	Serial.print("ACTUATOR SERIALIZED: ");
+	Serial.println(s.c_str());
 
 	return s;
+}
+
+std::string GrowlActuator::getName()
+{
+	return _name;
 }
 
 short GrowlActuator::getMode()

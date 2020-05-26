@@ -19,7 +19,12 @@ class GrowlChamber : public Chamber
 {
 
 public:
-	GrowlChamber(){};
+	GrowlChamber() {};
+	GrowlChamber(int bid) : _outTakeFan(bid), _humiditySensor(bid),	_tempSensor(bid),
+		_barometer(bid), _mainLights(bid),_hvac(bid), _inTakeFan(bid), _lightSensor(bid),
+		_humiditySensorExt(bid), _tempSensorExt(bid){
+ 
+	};
 	void init();
 	void loop(); 
 

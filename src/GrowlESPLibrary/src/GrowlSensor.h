@@ -1,13 +1,16 @@
 #pragma once
 #include <ctime>
 #include <iostream>
-#include "GrowlDevice.h"
+#include <GrowlDevice.h>
 class GrowlSensor : public GrowlDevice
 {
 
 public:
-	GrowlSensor(int gpid);
-	GrowlSensor();
+	GrowlSensor(int bid,int gpid);
+	GrowlSensor(int bid);
+	GrowlSensor() {
+		_boardId = -1;
+	};
 	std::string toJSON();
 
 protected:
@@ -18,7 +21,10 @@ protected:
 
 class LightSensor : public GrowlSensor {
 public:
-	LightSensor(int gpid) : GrowlSensor(gpid) {
+	LightSensor(int bid, int gpid) : GrowlSensor(bid,gpid) {
+		_sensortype = 'L';
+	};
+	LightSensor(int bid) : GrowlSensor(bid) {
 		_sensortype = 'L';
 	};
 	LightSensor() : GrowlSensor() {
@@ -28,7 +34,10 @@ public:
 
 class TemperatureSensor : public GrowlSensor {
 public:
-	TemperatureSensor(int gpid) : GrowlSensor(gpid) {
+	TemperatureSensor(int bid, int gpid) : GrowlSensor(bid, gpid) {
+		_sensortype = 'T';
+	};
+	TemperatureSensor(int bid) : GrowlSensor(bid) {
 		_sensortype = 'T';
 	};
 	TemperatureSensor() : GrowlSensor() {
@@ -38,12 +47,18 @@ public:
 
 class HumiditySensor : public GrowlSensor {
 public:
+	HumiditySensor(int bid) : GrowlSensor(bid) {
+		_sensortype = 'H';
+	};
 	HumiditySensor() : GrowlSensor() {
 		_sensortype = 'H';
 	};
 };
 class BaromenterSensor : public GrowlSensor {
 public:
+	BaromenterSensor(int bid) : GrowlSensor(bid) {
+		_sensortype = 'B';
+	};
 	BaromenterSensor() : GrowlSensor() {
 		_sensortype = 'B';
 	};

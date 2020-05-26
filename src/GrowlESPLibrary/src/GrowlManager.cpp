@@ -16,7 +16,7 @@
 #include <GrowlManager.h>
 #include <GrowlCommand.h>
 
-#define BOARD_ID 2
+
 #define DRY_MODE 2
 
 using namespace std;
@@ -58,8 +58,11 @@ void GrowlManager::initChamber(const char* serverhost, const int serverport, con
 	}
 	else {
 		DryChamber* cptr = (DryChamber*)&_chamber;
-		_actuatorsPtr.push_back(cptr->getIntakeFan());
+		//_actuatorsPtr.push_back(cptr->getIntakeFan());
 		_actuatorsPtr.push_back(cptr->getOuttakeFan());
+		_sensorsPtr.push_back(cptr->getTemperatureSensor());
+		_sensorsPtr.push_back(cptr->getHumiditySensor());
+		_sensorsPtr.push_back(cptr->getBarometerSensor());
 	}
 }
 
@@ -70,8 +73,7 @@ void GrowlManager::loop()
 
 	_pc++;
 
-	//schedules and conditions
-	chamberLogic();
+
 	//retrieves new commands
 	retrieveServerCommands();
 
@@ -111,48 +113,6 @@ void GrowlManager::calcDelay() {
 		_sburtoMode--;
 
 }
-
-void GrowlManager::chamberLogic()
-{
-	/*time_t tnow;
-	time(&tnow);
-	//int ret = localtime_s(&when, &tnow);
-	struct tm* now = localtime(&tnow);
-	char chTime[9] = ""; */
-
-	/*
-	struct tm timeinfo;
-	//struct tm now;
-	if (getLocalTime(&timeinfo)) {
-		//LIFECYCLE
-		Serial.print("LOCAL HOUR: ");
-		Serial.println(timeinfo.tm_hour);
-		
-		//mainlights schedule
-		if (_chamber.getMainLights()->getMode() == MODE_AUTO) {
-			if (hourSchedule[timeinfo.tm_hour] != _chamber.getMainLights()->getReading()) {
-				Serial.print("AUTO LIGHTS SWITCH: ");
-				Serial.println(hourSchedule[timeinfo.tm_hour]);
-				_chamber.switchMainLights(hourSchedule[timeinfo.tm_hour]);
-			}
-		}
-		else
-			Serial.println("MANUAL LIGHTS");
-	}
-	else
-		Serial.println("getLocalTime() ERROR");
-
-	//heat out take
-	if (_chamber.getOuttakeFan()->getMode() == MODE_AUTO) {
-		if (_chamber.getTemperatureSensor()->getReading() > 29) {
-			_chamber.switchOuttakeFan(true);
-		}
-		else if (_chamber.getTemperatureSensor()->getReading() < 27) {
-			_chamber.switchOuttakeFan(false);
-		}
-	}*/
-}
-
 
 void GrowlManager::applyServerCommands()
 {
@@ -343,8 +303,12 @@ void GrowlManager::sendSensor(String completeUrl, GrowlSensor* toSend)
 void GrowlManager::sendRandomActuator()
 {
 	GrowlActuator* toSend = _actuatorsPtr.at(_pc % _actuatorsPtr.size());
-	String url = "/api/esp/v1/actuators/id/";
+	String url = "/api/esp/v2/actuators/";
+	url += _boardId;
+	url += "/";
 	url += toSend->getPid();
+	Serial.print("Send pid: " );
+
 	String completeUrl = String("") + _proto + _host + ":" + _httpPort + url;
 	sendActuator(completeUrl, toSend);
 }
@@ -395,13 +359,14 @@ Chamber* GrowlManager::getChamber()
 
 void GrowlManager::initMainLights(int HWPIN)
 {
-	GrowlChamber* cptr = (GrowlChamber*)&_chamber;
-	cptr->setMainLightsPin(HWPIN);
+	_chamber->setMainLightsPin(HWPIN);
+	Serial.print("initMainLights on PIN: ");
+	Serial.println(HWPIN);
 }
 
 void GrowlManager::initIntakeFan(int HWPIN)
 {
-	Serial.println("initP");
+
 	_chamber->setIntakeFanPin(HWPIN);
 	Serial.print("initIntakeFan on PIN: ");
 	Serial.println(HWPIN);
@@ -411,6 +376,15 @@ void GrowlManager::initOuttakeFanPin(int HWPIN)
 {
 	//GrowlChamber* cptr = (GrowlChamber*)&_chamber;
 	_chamber->setOuttakeFanPin(HWPIN);
+	Serial.print("initOuttakeFanPin on PIN: ");
+	Serial.println(HWPIN);
+}
+
+void GrowlManager::setHeaterPin(int HWPIN)
+{
+	_chamber->setHeaterPin(HWPIN);
+	Serial.print("setHeaterPin on PIN: ");
+	Serial.println(HWPIN);
 }
 
 bool GrowlManager::hasChamberError()
@@ -418,22 +392,16 @@ bool GrowlManager::hasChamberError()
 	return _chamber->hasErrors();
 }
 
-void GrowlManager::setHeaterPin(int HWPIN)
-{
-	GrowlChamber* cptr = (GrowlChamber*)&_chamber;
-	cptr->setHeaterPin(HWPIN);
-}
+
 
 void GrowlManager::initLightSensor(int HWPIN)
 {
-	GrowlChamber* cptr = (GrowlChamber*)&_chamber;
-	cptr->setLightSensorPin(HWPIN);
+	_chamber->setLightSensorPin(HWPIN);
 }
 
 void GrowlManager::setDhtPin(int HWPIN)
 {
-	GrowlChamber* cptr = (GrowlChamber*)&_chamber;
-	cptr->setDhtPin(HWPIN);
+	_chamber->setDhtPin(HWPIN);
 }
 
 void GrowlManager::setBME280Pin(int SCLPIN, int SDAPIN)

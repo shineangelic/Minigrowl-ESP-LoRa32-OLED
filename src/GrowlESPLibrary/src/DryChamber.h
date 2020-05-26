@@ -18,7 +18,9 @@ class DryChamber : public Chamber
 {
 
 public:
-	DryChamber(){};
+	DryChamber() {};
+	DryChamber(int bid) : _outTakeFan(bid), _humiditySensor(bid), _tempSensor(bid), _barometer(bid) {
+	};
 	void init();
 	void loop(); 
 	std::string reportStatus(); 
@@ -34,28 +36,20 @@ public:
 	void setBME280Pin(int SCLPIN, int SDAPIN);
 
 	bool hasErrors(); 
-	IntakeFan*		getIntakeFan();
 	OutTakeFan*		getOuttakeFan();
 	float			getPressure();
-	int				getLumen();//NOT real Lumen!
 	BaromenterSensor*	getBarometerSensor();
 	TemperatureSensor*	getTemperatureSensor();
 	HumiditySensor*		getHumiditySensor();
-	HumiditySensor*		getExternalHumiditySensor(); 
 private:
 	
 	bool initTemp();
 	static void tempTask(void* pvParameters);
-	int _dht_pin;
 	int _SCLPIN;
 	int _SDAPIN;
 
 	OutTakeFan				_outTakeFan;
-	MainLights				_mainLights;
-	Hvac					_hvac;
-	IntakeFan				_inTakeFan;
 
-	LightSensor					_lightSensor;
 	HumiditySensor				_humiditySensor;
 	TemperatureSensor			_tempSensor;
 	BaromenterSensor			_barometer;

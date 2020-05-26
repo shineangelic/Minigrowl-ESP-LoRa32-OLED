@@ -89,13 +89,13 @@ void setup(void)
 
 	pinMode(HEATER, OUTPUT);
 	gm.setHeaterPin(HEATER);
-
+	
 	gm.initLightSensor(LIGHT_SENSOR);
 	pinMode(LIGHT_SENSOR, INPUT);
 
 	gm.setDhtPin(DHTPIN);
 	pinMode(DHTPIN, INPUT);
-
+	
 	gm.setBME280Pin(SCL, SDA);
 
 	pinMode(ERRPIN, OUTPUT);

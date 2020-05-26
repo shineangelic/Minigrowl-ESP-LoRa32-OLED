@@ -30,11 +30,11 @@ public:
 	GrowlManager(int bid, int mode) {
 		_boardId = bid; _chamberMode = mode;
 		if (_chamberMode == 1) {
-			_chamberM = GrowlChamber();
+			_chamberM = GrowlChamber(bid);
 			_chamber = (Chamber*)&_chamberM;
 		}
 		else {
-			_chamberD = DryChamber();
+			_chamberD = DryChamber(bid);
 			_chamber = (Chamber*)&_chamberD;
 		}
 	};

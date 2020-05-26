@@ -17,9 +17,11 @@ public:
 	Chamber() {};
 	virtual  void init() {};
 	virtual void loop()=0;
+	//function used by OLED diplay
 	virtual std::string reportStatus()=0;
+	//used to light an 'error' LED
 	virtual bool hasErrors()=0;
-
+	//virtual function that will be implemented on a device base
 	virtual void setBME280Pin(int SCLPIN, int SDAPIN)=0;
 	virtual void setMainLightsPin(int HWPIN) = 0;
 	virtual void setIntakeFanPin(int HWPIN) = 0;

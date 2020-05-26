@@ -9,13 +9,15 @@
 using namespace ARDUINOJSON_NAMESPACE;
 
 
-GrowlSensor::GrowlSensor(int gpid)
+GrowlSensor::GrowlSensor(int bid,int gpid)
 {
 	_gpioid = gpid;
+	_boardId = bid;
 }
 
-GrowlSensor::GrowlSensor()
+GrowlSensor::GrowlSensor(int bid)
 {
+	_boardId = bid;
 }
 
 std::string GrowlSensor::toJSON()

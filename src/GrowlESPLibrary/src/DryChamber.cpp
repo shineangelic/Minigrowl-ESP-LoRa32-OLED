@@ -89,8 +89,6 @@ void DryChamber::loop()
 
 
 	//operate relays
-	digitalWrite(_mainLights.getPid(), _mainLights.getReading());
-	digitalWrite(_inTakeFan.getPid(), _inTakeFan.getReading());
 	digitalWrite(_outTakeFan.getPid(), _outTakeFan.getReading());
 
 	yield();
@@ -105,10 +103,8 @@ std::string DryChamber::reportStatus()
 	strftime(chTime, 21, " %H:%M:%S %d/%m/%Y", &timeinfo);
 
 	std::ostringstream ss;
-	  
-	ss << "FAN: IN: ";
-	ss << (this->getIntakeFan()->getReading() != 0 ? "ON" : "OFF");
-	ss << " - OUT: ";
+	   
+	ss << "FAN - OUT: ";
 	ss << (this->getOuttakeFan()->getReading() != 0 ? "ON" : "OFF");
 	ss << "\n";
 	ss << "Hum: ";
@@ -133,8 +129,8 @@ std::string DryChamber::reportStatus()
 bool DryChamber::initTemp() {
 	byte resultValue = 0;
 	// Initialize temperature sensor
-	Serial.print("DHT init on PIN ");
-	Serial.println(_dht_pin);
+	Serial.print("DryChamber::initTemp()");
+ 
 
 	// Start task to get temperature
 	xTaskCreatePinnedToCore(
@@ -220,13 +216,7 @@ void retrieveDTemperatureTask() {
 
 }
  
-
-bool DryChamber::switchIntakeFan(bool on)
-{
-	_inTakeFan.setReading(on ? 1 : 0);
-	digitalWrite(_inTakeFan.getPid(), _inTakeFan.getReading());
-	return _inTakeFan.getReading();
-}
+ 
 
 bool DryChamber::switchOuttakeFan(bool on)
 {
@@ -250,6 +240,7 @@ void DryChamber::setIntakeFanPin(int HWPIN)
 void DryChamber::setOuttakeFanPin(int HWPIN)
 {
 	_outTakeFan.setPid(HWPIN);
+	Serial.println("dry chamber set _outTakeFan PIN ");
 }
 
 void DryChamber::setHeaterPin(int HWPIN)
@@ -273,6 +264,8 @@ void DryChamber::setBME280Pin(int SCLPIN, int SDAPIN)
 	_SDAPIN = SDAPIN;
 	_barometer.setPid(SDAPIN);
 	_humiditySensor.setPid(SCLPIN);
+	_tempSensor.setPid(SCLPIN + SDAPIN);
+	Serial.println("dry chamber set BME PIN ");
 
 }
 
@@ -280,11 +273,7 @@ bool DryChamber::hasErrors()
 {
 	return _bmeDryer280Err ;
 }
-
-IntakeFan* DryChamber::getIntakeFan()
-{
-	return &_inTakeFan;
-}
+ 
 
 OutTakeFan* DryChamber::getOuttakeFan()
 {
