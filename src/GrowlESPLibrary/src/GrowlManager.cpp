@@ -146,7 +146,9 @@ void GrowlManager::applyServerCommands()
 					//let srv breath
 					try
 					{
-						String url = "/api/esp/v1/actuators/id/";
+						String url = "/api/esp/v2/actuators/";
+						url += _boardId;
+						url += "/";
 						url += actuatorToSend->getPid();
 						String completeUrl = String("") + _proto + _host + ":" + _httpPort + url;
 						sendActuator(completeUrl, actuatorToSend);
@@ -176,7 +178,9 @@ bool GrowlManager::removeExecutedCommand(GrowlCommand* executed) {
 	HTTPClient http;
 
 	// We now create a URI for the request
-	String url = "/api/esp/v1/commands/id/";
+	String url = "/api/esp/v2/commands/";
+	url += _boardId;
+	url += "/";
 	url += executed->getQueueId();
 	String completeUrl = String("") + _proto + _host + ":" + _httpPort + url;
 	Serial.print("removeExecutedCommand() url: ");
@@ -208,7 +212,9 @@ void GrowlManager::retrieveServerCommands()
 	}
 
 	// We now create a URI for the request
-	String urlPath = "/api/esp/v1/commands/";
+	String urlPath = "/api/esp/v2/commands/";
+	urlPath += _boardId;
+	urlPath += "/";
 	String completeUrl = String("") + _proto + _host + ":" + _httpPort + urlPath;
 
 	Serial.print("retrieveServerCommands: ");
