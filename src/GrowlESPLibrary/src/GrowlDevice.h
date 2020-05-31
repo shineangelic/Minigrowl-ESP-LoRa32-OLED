@@ -10,13 +10,13 @@ public:
 	GrowlDevice() {
 		_boardId = -1;
 		_gpioid = -1;
-		_errorPresent = true;
-		_reading = -1;
+		_errorPresent = false;
+		_reading = 0;
 	};
 	GrowlDevice(int boardId) {
 		_boardId = boardId; _gpioid = -1;
-		_errorPresent = true;
-		_reading = -1;
+		_errorPresent = false;
+		_reading = 0;
 	};
 	int			getBoardId();
 	void		setBoardId(int bid);

@@ -122,6 +122,9 @@ void GrowlManager::applyServerCommands()
 
 	if (!_commandsQueue.empty()) {
 		GrowlCommand exec = _commandsQueue.front();
+		Serial.print("COMMAND FOR: ");
+		Serial.println(exec.getTargetActuatorId());
+
 		//check for meta commands
 		if (exec.getValueParameter() == CMD_FULLREFRESH && exec.getTargetActuatorId() == -1) {
 			//simple refresh, sburto mode
