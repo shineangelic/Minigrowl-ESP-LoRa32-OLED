@@ -23,7 +23,7 @@ using namespace std;
 
 const char* CONTENT_TYPE_JSON_UTF8 = "application/json;charset=UTF-8";
 
-//const int hourSchedule[] = { 1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+const int hourSchedule[] = { 1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 const int BASE_SLEEP = 250;
 
 const int MAX_SLEEP = 12000;//15 seconds
