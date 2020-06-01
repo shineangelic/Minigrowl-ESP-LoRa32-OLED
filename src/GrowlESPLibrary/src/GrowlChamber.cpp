@@ -120,13 +120,8 @@ void GrowlChamber::loop()
 	struct tm timeinfo;
 	//struct tm now;
 	if (getLocalTime(&timeinfo)) {
-		//LIFECYCLE
-		Serial.print("LOCAL HOUR: ");
-		Serial.println(timeinfo.tm_hour);
-		/*Serial.print(" SCHED: ");
-		Serial.print(hourSchedule[now.tm_hour]);
-		Serial.print(" CUR: ");
-		Serial.println(_chamber.getMainLights()->getReading());*/
+		//LIFECYCLE 
+
 		//mainlights schedule
 		if (_mainLights.getMode() == MODE_AUTO) {
 			if (hourSchedule[timeinfo.tm_hour] != _mainLights.getReading()) {
@@ -284,6 +279,8 @@ void retrieveTemperatureTask() {
 
 	float temperature = bme.readTemperature();
 	float humidity = bme.readHumidity();
+	float value = (int)(humidity * 100 + .5);
+	humidity = (float)value / 100;
 	float pressure = bme.readPressure() / 100.0F;
 	Serial.print("BME280: T:");
 	Serial.print(temperature);
