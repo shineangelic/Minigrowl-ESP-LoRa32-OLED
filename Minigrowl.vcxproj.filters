@@ -16,9 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Minigrowl.ino" />
-    <None Include="src\arduino folders read me.txt">
-      <Filter>Misc Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.Minigrowl.vsarduino.h">

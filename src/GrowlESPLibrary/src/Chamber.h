@@ -21,6 +21,8 @@ public:
 	virtual std::string reportStatus()=0;
 	//used to light an 'error' LED
 	virtual bool hasErrors()=0;
+	virtual float getHumidity();
+	virtual float getTemperature();
 	//virtual function that will be implemented on a device base
 	virtual void setBME280Pin(int SCLPIN, int SDAPIN)=0;
 	virtual void setMainLightsPin(int HWPIN) = 0;

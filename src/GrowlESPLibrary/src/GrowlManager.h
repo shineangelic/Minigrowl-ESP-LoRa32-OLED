@@ -51,6 +51,9 @@ public:
 	void initLightSensor(int HWPIN);
 	void setDhtPin(int HWPIN);
 	void setBME280Pin(int SCLPIN, int SDAPIN);
+
+	//each some cycle
+	bool alarmCycle();
 private:
 	void applyServerCommands();
 	bool removeExecutedCommand(GrowlCommand* executed);

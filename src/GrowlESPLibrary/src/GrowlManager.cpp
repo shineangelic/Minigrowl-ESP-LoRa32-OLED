@@ -22,10 +22,8 @@
 using namespace std;
 
 const char* CONTENT_TYPE_JSON_UTF8 = "application/json;charset=UTF-8";
-
-const int hourSchedule[] = { 1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+ 
 const int BASE_SLEEP = 250;
-
 const int MAX_SLEEP = 12000;//15 seconds
 const int SLEEP_INCREMENT = 10;//100 cycles to increment a second
 
@@ -113,6 +111,11 @@ void GrowlManager::calcDelay() {
 	if (_sburtoMode > 0)
 		_sburtoMode--;
 
+}
+
+bool GrowlManager::alarmCycle()
+{
+	return _pc%10 == 0;
 }
 
 void GrowlManager::applyServerCommands()

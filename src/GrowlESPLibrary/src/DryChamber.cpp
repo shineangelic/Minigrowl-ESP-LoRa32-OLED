@@ -18,6 +18,8 @@ here named lights, outFan and inFan and Heater
 #define TIMER_INTERVAL_SECONDS 20
 #define BME280_INTERVAL_MSEC 60000
 
+#define THOLD_TURNON_FAN 60//turn on fan at 60% hum
+
 /** Task handle to retrieve sensors value */
 //void tempTask(void* pvParameters);
 void triggerGetDryTemp();
@@ -86,7 +88,15 @@ void DryChamber::loop()
 	_tempSensor.setHasError(_bmeDryer280Err);
 	_humiditySensor.setHasError(_bmeDryer280Err); 
 
-
+	if (_outTakeFan.getMode() == MODE_AUTO) {
+		if (_humiditySensor.getReading() > THOLD_TURNON_FAN) {
+			Serial.print("AUTO OUTTAKE SWITCH: ");
+			switchOuttakeFan(true); 
+		}else
+			switchOuttakeFan(false);
+	}
+	else
+		Serial.println("MANUAL LIGHTS");
 
 	//operate relays
 	digitalWrite(_outTakeFan.getPid(), _outTakeFan.getReading());
@@ -217,17 +227,13 @@ void retrieveDTemperatureTask() {
 	_dryerPressure = pressure;
 
 }
- 
- 
 
 bool DryChamber::switchOuttakeFan(bool on)
 {
 	_outTakeFan.setReading(on ? 1 : 0);
-	digitalWrite(_outTakeFan.getPid(), on);
+	digitalWrite(_outTakeFan.getPid(), _outTakeFan.getReading());
 	return on;
 }
- 
- 
 
 void DryChamber::setMainLightsPin(int HWPIN)
 {
@@ -242,7 +248,6 @@ void DryChamber::setIntakeFanPin(int HWPIN)
 void DryChamber::setOuttakeFanPin(int HWPIN)
 {
 	_outTakeFan.setPid(HWPIN);
-
 }
 
 void DryChamber::setHeaterPin(int HWPIN)
@@ -269,6 +274,16 @@ void DryChamber::setBME280Pin(int SCLPIN, int SDAPIN)
 	_tempSensor.setPid(SCLPIN + SDAPIN);
 	Serial.println("dry chamber set BME PIN ");
 
+}
+
+float DryChamber::getHumidity()
+{
+	return _humiditySensor.getReading();
+}
+
+float DryChamber::getTemperature()
+{
+	return _tempSensor.getReading();
 }
 
 bool DryChamber::hasErrors()

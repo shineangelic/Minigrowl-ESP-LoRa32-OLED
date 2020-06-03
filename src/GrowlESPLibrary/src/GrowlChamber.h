@@ -42,7 +42,8 @@ public:
 	void setLightSensorPin(int HWPIN);
 	void setDhtPin(int HWPIN);
 	void setBME280Pin(int SCLPIN, int SDAPIN);
-
+	float getHumidity();
+	float getTemperature();
 	bool hasErrors();
 	MainLights*		getMainLights();
 	IntakeFan*		getIntakeFan();

@@ -27,6 +27,8 @@ public:
 	std::string reportStatus(); 
 	bool switchIntakeFan(bool on);
 	bool switchOuttakeFan(bool on);  
+	float getHumidity();
+	float getTemperature();
 
 	void setMainLightsPin(int HWPIN);
 	void setIntakeFanPin(int HWPIN);
@@ -35,6 +37,8 @@ public:
 	void setLightSensorPin(int HWPIN);
 	void setDhtPin(int HWPIN);
 	void setBME280Pin(int SCLPIN, int SDAPIN);
+
+
 
 	bool hasErrors(); 
 	OutTakeFan*		getOuttakeFan();

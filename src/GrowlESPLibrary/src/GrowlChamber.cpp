@@ -19,7 +19,7 @@ here named lights, outFan and inFan and Heater
 #define BME280_INTERVAL_MSEC 60000
 #define EXT_OFFSET 32
 
-const int hourSchedule[] = { 1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+const int hourSchedule[] = { 0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0 };
 
 /** Task handle to retrieve sensors value */
 //void tempTask(void* pvParameters);
@@ -407,6 +407,16 @@ void GrowlChamber::setBME280Pin(int SCLPIN, int SDAPIN)
 	_humiditySensor.setPid(SCLPIN);
 	_humiditySensorExt.setPid(SCLPIN + EXT_OFFSET);
 
+}
+
+float GrowlChamber::getHumidity()
+{
+	return _humiditySensor.getReading();
+}
+
+float GrowlChamber::getTemperature()
+{
+	return _tempSensor.getReading();
 }
 
 bool GrowlChamber::hasErrors()
