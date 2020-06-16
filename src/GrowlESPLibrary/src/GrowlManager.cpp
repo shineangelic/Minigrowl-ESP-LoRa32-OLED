@@ -22,9 +22,10 @@
 using namespace std;
 
 const char* CONTENT_TYPE_JSON_UTF8 = "application/json;charset=UTF-8";
- 
+
+//starting minimum sleep per cycle
 const int BASE_SLEEP = 250;
-const int MAX_SLEEP = 12000;//15 seconds
+const int MAX_SLEEP_MSEC = 12000;//12 seconds
 const int SLEEP_INCREMENT = 10;//100 cycles to increment a second
 
 //cit. Menzi va veloce ogni tanto
@@ -105,7 +106,7 @@ void GrowlManager::calcDelay() {
 		_sleepDelay = BASE_SLEEP;
 	}
 
-	if (_sleepDelay < MAX_SLEEP)
+	if (_sleepDelay < MAX_SLEEP_MSEC)
 		_sleepDelay += SLEEP_INCREMENT;
 
 	if (_sburtoMode > 0)

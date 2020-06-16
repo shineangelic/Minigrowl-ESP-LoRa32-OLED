@@ -19,7 +19,7 @@ here named lights, outFan and inFan and Heater
 #define BME280_INTERVAL_MSEC 60000
 #define EXT_OFFSET 32
 
-const int hourSchedule[] = { 0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0 };
+const int hourSchedule[] = { 0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0 };
 
 /** Task handle to retrieve sensors value */
 //void tempTask(void* pvParameters);

@@ -3,12 +3,10 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <time.h>
 #include <iostream> 
 #include <queue>
 #include <deque>
 #include <array> // for array, at() 
-#include <tuple> // for get() 
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "arduino.h"
@@ -18,7 +16,6 @@
 
 #include <GrowlSensor.h>
 #include <GrowlActuator.h>
-#include <ctime>
 #include <GrowlChamber.h>
 #include <DryChamber.h>
 
@@ -62,7 +59,6 @@ private:
 	void sendSensor(String completeUrl, GrowlSensor* toSend);
 	void sendActuator(const String completeUrl, GrowlActuator* toSend);
 	void sendRandomActuator();
-	void chamberLogic();
 	short _pc;//program counter
 	short _sburtoMode;
 	Chamber*	_chamber;
